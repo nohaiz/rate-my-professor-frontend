@@ -43,13 +43,13 @@ const Navbar = ({ user, handleSignout }) => {
 
         <div className="hidden lg:flex lg:flex-1 lg:justify-center space-x-8">
           <Link
-            to="/institution"
+            to="/institutes"
             className="text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
           >
             Institution
           </Link>
           <Link
-            to="/professor"
+            to="/professors"
             className="text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
           >
             Professor

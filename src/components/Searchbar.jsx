@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import InstituteServices from "../../services/InstituteServices";
 import ProfessorServices from "../../services/ProfessorServices";
 
-const Searchbar = () => {
+const Searchbar = ({ submittedSearch }) => {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [searchType, setSearchType] = useState("institutes");
@@ -22,9 +22,8 @@ const Searchbar = () => {
             setSuggestions(instituteSuggestions);
           } else if (searchType === "professors") {
             response = await ProfessorServices.indexProfessors(query);
-
             if (response.professorsData && Array.isArray(response.professorsData)) {
-              const professorSuggestions = response.professorsData.map(prof => `${prof.professor.firstName} ${prof.professor.lastName}`);
+              const professorSuggestions = response.professorsData.map(prof => `${prof.firstName} ${prof.lastName}`);
               setSuggestions(professorSuggestions);
             } else {
               setSuggestions([]);
@@ -43,7 +42,7 @@ const Searchbar = () => {
 
   const handleSearch = () => {
     if (query.trim()) {
-      // navigate(`/search-results?name=${query.trim()}&type=${searchType}`);
+      navigate(`/professors?name=${query.trim()}`);
     }
   };
 

@@ -7,6 +7,9 @@ import './App.css'
 import Navbar from './components/Navbar';
 import Home from './pages/home/Home';
 
+import Institute from './pages/institute/Institute';
+import Professor from './pages/professor/Professor';
+
 //  SERVICES
 import AuthServices from '../services/AuthServices'
 
@@ -19,14 +22,17 @@ function App() {
     setUser(null);
   };
 
+
   return (
     <>
       <Navbar user={user} handleSignout={handleSignout} />
       <Routes>
         <Route path='/' element={<Home />} />
+        <Route path='/institutes' element={<Institute />}></Route>
+        <Route path='/professors' element={<Professor />}></Route>
       </Routes>
     </>
   )
-}
+  }
 
-export default App
+  export default App
