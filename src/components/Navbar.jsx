@@ -101,7 +101,7 @@ const Navbar = ({ user, handleSignout }) => {
       >
         <div className="space-y-1 px-2 pt-2 pb-3 sm:px-3">
           <Link
-            to="/institution"
+            to="/institutes"
             className="block w-full text-left text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
           >
             Institution

@@ -1,6 +1,6 @@
 const BASE_URL = import.meta.env.VITE_BACK_END_SERVER_URL;
 
-const indexInstitutes = async (page = 1, limit = 10, name = '') => {
+const indexInstitutes = async (page, limit, name = '') => {
   try {
     const url = new URL(`${BASE_URL}/institutes`);
     const params = { page, limit, name };

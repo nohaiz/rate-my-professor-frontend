@@ -17,7 +17,7 @@ const Searchbar = ({ submittedSearch }) => {
           let response;
 
           if (searchType === "institutes") {
-            response = await InstituteServices.indexInstitutes(1, 5, query);
+            response = await InstituteServices.indexInstitutes(query);
             const instituteSuggestions = response.institution.map(inst => inst.name);
             setSuggestions(instituteSuggestions);
           } else if (searchType === "professors") {
@@ -42,7 +42,7 @@ const Searchbar = ({ submittedSearch }) => {
 
   const handleSearch = () => {
     if (query.trim()) {
-      navigate(`/professors?name=${query.trim()}`);
+      navigate(`/${searchType}?name=${query.trim()}`);
     }
   };
 
