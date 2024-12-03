@@ -1,11 +1,12 @@
 const BASE_URL = import.meta.env.VITE_BACK_END_SERVER_URL;
 
-const indexProfessors = async (name = '') => {
+const indexProfessors = async (page, limit, name = '') => {
   try {
     const url = new URL(`${BASE_URL}/professors`);
-    if (name) {
-      url.searchParams.append('name', name);
-    }
+    const params = { page, limit, name };
+    Object.keys(params).forEach(key => {
+      if (params[key]) url.searchParams.append(key, params[key]);
+    });
 
     const res = await fetch(url, {
       method: 'GET',
@@ -28,7 +29,7 @@ const indexProfessors = async (name = '') => {
 
   } catch (error) {
     console.error("Error fetching professors:", error);
-    return [];
+    return { professorsData: [], totalProfessors: 0 };
   }
 };
 

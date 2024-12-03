@@ -26,27 +26,9 @@ const Institute = () => {
         setInstitutes([]);
       }
     };
+
     fetchInstitutes();
   }, [query, currentPage]);
-
-  useEffect(() => {
-    const pageFromUrl = new URLSearchParams(location.search).get("page");
-    const totalPages = Math.ceil(totalInstitutes / 10);
-    let page = pageFromUrl ? Math.max(1, parseInt(pageFromUrl)) : 1;
-
-    // Prevent the page from exceeding totalPages
-    if (page > totalPages) {
-      page = totalPages;
-    }
-
-    // Set the currentPage to the valid page
-    setCurrentPage(page);
-
-    // If the page in the URL is invalid, redirect to the last valid page
-    if (page !== parseInt(pageFromUrl)) {
-      navigate(`?page=${page}`);
-    }
-  }, [location.search, totalInstitutes, navigate]);
 
   const getRatingColor = (rating) => {
     if (rating >= 4.5) return "bg-lime-400";
@@ -56,8 +38,8 @@ const Institute = () => {
   };
 
   const handlePageChange = (page) => {
+    if (page < 1 || page > Math.ceil(totalInstitutes / 10)) return;
     setCurrentPage(page);
-    navigate(`?page=${page}`);
   };
 
   const totalPages = Math.ceil(totalInstitutes / 10);
@@ -105,7 +87,7 @@ const Institute = () => {
               </div>
             ))
           ) : (
-            <p>No institutions found</p>
+            <></>
           )}
 
           {totalPages > 1 && (

@@ -17,13 +17,21 @@ const Searchbar = ({ submittedSearch }) => {
           let response;
 
           if (searchType === "institutes") {
-            response = await InstituteServices.indexInstitutes(query);
-            const instituteSuggestions = response.institution.map(inst => inst.name);
+            response = await InstituteServices.indexInstitutes({ name: query });
+
+            const instituteSuggestions = response.institutions.filter(inst =>
+              inst.name.toLowerCase().includes(query.toLowerCase())
+            ).map(inst => inst.name);
+
             setSuggestions(instituteSuggestions);
           } else if (searchType === "professors") {
-            response = await ProfessorServices.indexProfessors(query);
+            response = await ProfessorServices.indexProfessors({ name: query });
+
             if (response.professorsData && Array.isArray(response.professorsData)) {
-              const professorSuggestions = response.professorsData.map(prof => `${prof.firstName} ${prof.lastName}`);
+              const professorSuggestions = response.professorsData.filter(prof =>
+                `${prof.firstName} ${prof.lastName}`.toLowerCase().includes(query.toLowerCase())
+              ).map(prof => `${prof.firstName} ${prof.lastName}`);
+
               setSuggestions(professorSuggestions);
             } else {
               setSuggestions([]);

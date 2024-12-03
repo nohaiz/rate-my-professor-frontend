@@ -1,31 +1,30 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
 import Searchbar from "../../components/Searchbar";
 import ProfessorServices from "../../../services/ProfessorServices";
 
 const Professor = () => {
   const [professors, setProfessors] = useState([]);
-  const location = useLocation();
-  const query = new URLSearchParams(location.search).get("name");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalProfessors, setTotalProfessors] = useState(0);
+  const query = new URLSearchParams(window.location.search).get("name");
 
   useEffect(() => {
     const fetchProfessors = async () => {
       try {
-        const response = await ProfessorServices.indexProfessors(query);
-
+        const response = await ProfessorServices.indexProfessors(currentPage, 10, query);
         if (response && Array.isArray(response.professorsData)) {
           setProfessors(response.professorsData);
+          setTotalProfessors(response.totalProfessors);
         } else {
           setProfessors([]);
         }
       } catch (error) {
-        console.error("Error fetching professors:", error);
         setProfessors([]);
       }
     };
 
     fetchProfessors();
-  }, [query]);
+  }, [query, currentPage]);
 
   const getRatingColor = (rating) => {
     if (rating >= 4.5) return "bg-lime-400";
@@ -33,6 +32,13 @@ const Professor = () => {
     if (rating >= 2.5) return "bg-red-500";
     return "bg-gray-500";
   };
+
+  const handlePageChange = (page) => {
+    if (page < 1 || page > Math.ceil(totalProfessors / 10)) return;
+    setCurrentPage(page);
+  };
+
+  const totalPages = Math.ceil(totalProfessors / 10);
 
   return (
     <div className="py-10">
@@ -82,7 +88,45 @@ const Professor = () => {
               </div>
             ))
           ) : (
-            <p>No professors found</p>
+            <></>
+          )}
+
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-8">
+              <nav aria-label="Page navigation" className="inline-flex items-center space-x-2">
+                <button
+                  onClick={() => handlePageChange(1)}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 rounded-md border bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-gray-300"
+                >
+                  First
+                </button>
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 rounded-md border bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-gray-300"
+                >
+                  Prev
+                </button>
+                <span className="px-4 py-2 text-gray-700">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 rounded-md border bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-gray-300"
+                >
+                  Next
+                </button>
+                <button
+                  onClick={() => handlePageChange(totalPages)}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 rounded-md border bg-indigo-600 text-white hover:bg-indigo-700 disabled:bg-gray-300"
+                >
+                  Last
+                </button>
+              </nav>
+            </div>
           )}
         </div>
       </div>
