@@ -15,7 +15,6 @@ const getUser = () => {
       signout();
       return null;
     }
-    console.log(user)
     return user;
   } catch (err) {
     console.error("Error retrieving user:", err);
@@ -57,7 +56,6 @@ const signin = async (email, password) => {
     });
 
     const json = await res.json();
-    console.log(json)
     if (json.error) {
       throw new Error(json.error);
     }

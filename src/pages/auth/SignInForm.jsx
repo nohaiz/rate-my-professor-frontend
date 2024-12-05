@@ -17,13 +17,12 @@ const SignInForm = () => {
         email,
         password,
       });
-      console.log(response)
       if (response.twofaRequired) {
         setIs2FAEnabled(true);
         setQrCodeUrl(response.qrCodeUrl);
       } else if (response.token) {
         window.localStorage.setItem("token", response.token);
-        window.location.href = "/";
+        setIs2FAEnabled(true);
       }
     } catch (err) {
       setError("Error: " + err.message);
@@ -89,8 +88,15 @@ const SignInForm = () => {
         </form>
       ) : (
         <div className="space-y-6 mt-6">
-          <h3 className="text-lg font-semibold text-gray-900 text-center">Scan the QR Code to Set Up Google Authenticator</h3>
-          <img src={qrCodeUrl} alt="QR Code for 2FA" className="mx-auto" />
+          {qrCodeUrl === '' ?
+            <></>
+            :
+            <>
+              <h3 className="text-lg font-semibold text-gray-900 text-center">Scan the QR Code to Set Up Google Authenticator</h3>
+              <img src={qrCodeUrl} alt="QR Code for 2FA" className="mx-auto" />
+            </>
+          }
+
           <form onSubmit={handleOtpSubmit} className="space-y-6 mt-6">
             <div>
               <label className="block text-sm font-medium text-gray-800 mb-2">Enter OTP from your Authenticator App:</label>
