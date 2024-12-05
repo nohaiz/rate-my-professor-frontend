@@ -54,18 +54,22 @@ const Navbar = ({ user, handleSignout }) => {
           >
             Professor
           </Link>
-          <Link
-            to="/profile"
-            className="text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
-          >
-            Profile
-          </Link>
-          <Link
-            to="/dashboard"
-            className="text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
-          >
-            Dashboard
-          </Link>
+          {user && (
+            <Link
+              to="/profile"
+              className="text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
+            >
+              Profile
+            </Link>
+          )}
+          {user?.role === 'admin' && (
+            <Link
+              to="/dashboard"
+              className="text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
+            >
+              Dashboard
+            </Link>
+          )}
         </div>
 
         <div className="hidden lg:flex lg:flex-1 lg:justify-end space-x-4">
@@ -107,23 +111,27 @@ const Navbar = ({ user, handleSignout }) => {
             Institution
           </Link>
           <Link
-            to="/professor"
+            to="/professors"
             className="block w-full text-left text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
           >
             Professor
           </Link>
-          <Link
-            to="/profile"
-            className="block w-full text-left text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
-          >
-            Profile
-          </Link>
-          <Link
-            to="/dashboard"
-            className="block w-full text-left text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
-          >
-            Dashboard
-          </Link>
+          {user && (
+            <Link
+              to="/profile"
+              className="block w-full text-left text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
+            >
+              Profile
+            </Link>
+          )}
+          {user?.type?.role === 'admin' && (
+            <Link
+              to="/dashboard"
+              className="block w-full text-left text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
+            >
+              Dashboard
+            </Link>
+          )}
         </div>
 
         <div className="space-y-1 px-2 pt-2 pb-3 sm:px-3 border-t border-gray-200">
