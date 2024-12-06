@@ -56,7 +56,7 @@ const Navbar = ({ user, handleSignout }) => {
           </Link>
           {user && (
             <Link
-              to="/profile"
+              to={`/profile/${user.Id}`}
               className="text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
             >
               Profile
@@ -118,7 +118,7 @@ const Navbar = ({ user, handleSignout }) => {
           </Link>
           {user && (
             <Link
-              to="/profile"
+              to={`/profile/${user.Id}`}
               className="block w-full text-left text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
             >
               Profile

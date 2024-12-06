@@ -20,8 +20,7 @@ const SignInForm = () => {
       if (response.twofaRequired) {
         setIs2FAEnabled(true);
         setQrCodeUrl(response.qrCodeUrl);
-      } else if (response.token) {
-        window.localStorage.setItem("token", response.token);
+      } else if (response.message === 'ok') {
         setIs2FAEnabled(true);
       }
     } catch (err) {

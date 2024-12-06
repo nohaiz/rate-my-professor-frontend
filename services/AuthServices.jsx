@@ -15,7 +15,7 @@ const getUser = () => {
       signout();
       return null;
     }
-    return user;
+    return user.type;
   } catch (err) {
     console.error("Error retrieving user:", err);
     return null;
@@ -37,7 +37,6 @@ const signup = async (formData) => {
     });
 
     const json = await res.json();
-
     if (json.error) {
       throw new Error(json.error);
     }
@@ -58,10 +57,6 @@ const signin = async (email, password) => {
     const json = await res.json();
     if (json.error) {
       throw new Error(json.error);
-    }
-    if (json.token) {
-      localStorage.setItem("token", json.token);
-      return json;
     }
     return json
   } catch (err) {
