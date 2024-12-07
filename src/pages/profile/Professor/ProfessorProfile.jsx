@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { AiOutlineEdit, AiOutlineDelete, AiOutlineClose } from "react-icons/ai";
 
 import ProfessorServices from "../../../../services/ProfessorServices";
 import ProfileService from "../../../../services/ProfileService";
 import ProfessorProfileForm from "./ProfessorProfileForm";
 
-const ProfessorProfile = () => {
+const ProfessorProfile = ({handleSignout}) => {
   const { id } = useParams();
   const [professorProfile, setProfessorProfile] = useState(null);
   const [isProfileVisible, setProfileVisible] = useState(true);
@@ -14,6 +14,7 @@ const ProfessorProfile = () => {
   const [isRatingsButtonDisabled, setRatingsButtonDisabled] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [courses, setCourses] = useState([]);
+  const navigate = useNavigate();
 
   const fetchProfessorProfile = async () => {
     try {
@@ -78,9 +79,20 @@ const ProfessorProfile = () => {
     }
   };
 
-  const handleDelete = () => {
-    console.log("Delete profile clicked");
-  };
+  const handleDelete = async () => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this profile?")
+    if (confirmDelete) {
+      try {
+        await ProfileService.deleteProfile(id)
+        alert("Profile deleted successfully.")
+        handleSignout()
+        navigate("/auth/sign-in")
+      } catch (error) {
+        console.error("Error deleting profile:", error)
+        alert("There was an error deleting the profile.")
+      }
+    }
+  }
 
   return (
     <div className="p-6">
@@ -164,7 +176,7 @@ const ProfessorProfile = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-3 mt-4">
                       <div className="text-sm font-medium text-gray-900">Institution</div>
                       <div className="text-sm text-gray-700 sm:col-span-2">
-                        {institution?.name || "Not Provided"}
+                        {institution?.name || "Empty"}
                       </div>
                     </div>
 
@@ -199,19 +211,19 @@ const ProfessorProfile = () => {
                             </div>
                           ))
                         ) : (
-                          "Not Provided"
+                          "Empty"
                         )}
                       </div>
                     </div>
 
-                    <div className="py-3 sm:grid sm:grid-cols-3 sm:px-0">
+                    <div className="py-3 sm:grid sm:grid-cols-3 sm:px-0 mt-1">
                       <dt className="text-sm font-medium text-gray-900">Biography</dt>
                       <dd className="mt-1 text-sm text-gray-700 sm:col-span-2 sm:mt-0">
                         <div
                           className="w-full sm:text-sm border border-gray-200 p-3 rounded-md bg-gray-10 text-gray-700 min-h-[150px] break-words"
                           style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}
                         >
-                          {bio || "Not Provided"}
+                          {bio || "Tell us about yourself..."}
                         </div>
                       </dd>
                     </div>

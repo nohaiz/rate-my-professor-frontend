@@ -43,4 +43,24 @@ const updateProfile = async (formdata, id) => {
   }
 };
 
-export default { getProfile, updateProfile }
+const deleteProfile = async (id) => {
+  try {
+    const response = await fetch(`${BASE_URL}/profile/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch profile');
+    }
+    const json = await response.json();
+    return json;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+export default { getProfile, updateProfile, deleteProfile }

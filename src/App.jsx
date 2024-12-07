@@ -43,11 +43,11 @@ function App() {
         {/* PRIVATE ROUTES */}
         {user ? (
           user.role === "student" ? (
-            <Route path="/profile/:id" element={<StudentProfile />} />
+            <Route path="/profile/:id" element={<StudentProfile handleSignout={handleSignout} />} />
           ) : user.role === "professor" ? (
-            <Route path="/profile/:id" element={<ProfessorProfile />} />
+            <Route path="/profile/:id" element={<ProfessorProfile handleSignout={handleSignout} />} />
           ) : (
-            <Route path="/profile/:id" element={<AdminProfile />} />
+            <Route path="/profile/:id" element={<AdminProfile handleSignout={handleSignout}/>} />
           )
         ) : <></>}
 

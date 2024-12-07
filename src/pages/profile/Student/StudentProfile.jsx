@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react"
-import { useParams } from "react-router-dom"
+import { useParams, useNavigate } from "react-router-dom"
 import { AiOutlineEdit, AiOutlineDelete, AiOutlineClose } from "react-icons/ai"
 
 import ProfileService from "../../../../services/ProfileService"
 import StudentProfileForm from "./StudentProfileForm"
 
-const StudentProfile = () => {
+const StudentProfile = ({ handleSignout }) => {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [studentProfile, setStudentProfile] = useState(null)
   const [isProfileVisible, setProfileVisible] = useState(true)
   const [isProfileButtonDisabled, setProfileButtonDisabled] = useState(false)
@@ -17,6 +18,7 @@ const StudentProfile = () => {
     const fetchStudentProfile = async () => {
       try {
         const response = await ProfileService.getProfile(id)
+        console.log(response)
         setStudentProfile(response)
       } catch (error) {
         console.error(error)
@@ -47,8 +49,19 @@ const StudentProfile = () => {
     setIsEditing(false)
   }
 
-  const handleDelete = () => {
-    console.log("Delete profile clicked")
+  const handleDelete = async () => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this profile?")
+    if (confirmDelete) {
+      try {
+        await ProfileService.deleteProfile(id)
+        alert("Profile deleted successfully.")
+        handleSignout()
+        navigate("/auth/sign-in")
+      } catch (error) {
+        console.error("Error deleting profile:", error)
+        alert("There was an error deleting the profile.")
+      }
+    }
   }
 
   return (
@@ -130,19 +143,19 @@ const StudentProfile = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-3 mt-4">
                       <div className="text-sm font-medium text-gray-900">Institution</div>
                       <div className="text-sm text-gray-700 sm:col-span-2">
-                        {institution.name || "Not Provided"}
+                        {institution?.name || "Empty"}
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 mt-4">
                       <div className="text-sm font-medium text-gray-900">Field of Study</div>
                       <div className="text-sm text-gray-700 sm:col-span-2">
-                        {fieldOfStudy || "Not Provided"}
+                        {fieldOfStudy || "Empty"}
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 mt-4">
                       <div className="text-sm font-medium text-gray-900">GPA</div>
                       <div className="text-sm text-gray-700 sm:col-span-2">
-                        {GPA || "Not Available"}
+                        {GPA || "Empty"}
                       </div>
                     </div>
                   </section>
