@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import DepartmentService from "../../../../services/DepartmentService";
 import ProfessorServices from "../../../../services/ProfessorServices";
 import ProfileService from "../../../../services/ProfileService";
+import InstituteServices from "../../../../services/InstituteServices";
 
 const ProfessorProfileForm = ({ professorProfile, setProfessorProfile, setIsEditing, courses }) => {
   const { id } = useParams();
@@ -26,7 +27,13 @@ const ProfessorProfileForm = ({ professorProfile, setProfessorProfile, setIsEdit
     const fetchDepartments = async () => {
       try {
         const response = await DepartmentService.indexDepartments();
-        setDepartments(response.departments);
+        const data = await InstituteServices.getInstitute(professorProfile?.professorAccount?.institution?._id);
+        const ans = data.institute.departments.map((institue) =>
+          response.departments.filter((dep) => institue._id.toString() === dep._id.toString())
+        );
+        const departmentsObject = Object.assign(ans.flat());
+        setDepartments(departmentsObject);
+
       } catch (error) {
         console.error('Error fetching departments:', error);
       }
@@ -113,20 +120,32 @@ const ProfessorProfileForm = ({ professorProfile, setProfessorProfile, setIsEdit
     setErrors({});
   };
 
-  const renderInputField = (label, name, type = 'text', disabled = false) => (
+  const renderInputField = (label, name, type = 'text', disabled = false, isTextArea = false) => (
     <div className="flex flex-col space-y-2">
       <label className="text-sm font-medium text-gray-900">{label}</label>
-      <input
-        type={type}
-        name={name}
-        value={formData[name] || ''}
-        onChange={handleChange}
-        className="sm:text-sm/6 border border-gray-300 p-2 rounded-md min-h-[40px] focus:ring-indigo-500 focus:border-indigo-500"
-        disabled={disabled}
-      />
+      {isTextArea ? (
+        <textarea
+          name={name}
+          value={formData[name] || ''}
+          onChange={handleChange}
+          className="sm:text-sm/6 border border-gray-300 p-2 rounded-md min-h-[40px] focus:ring-indigo-500 focus:border-indigo-500"
+          disabled={disabled}
+          rows="4"
+        />
+      ) : (
+        <input
+          type={type}
+          name={name}
+          value={formData[name] || ''}
+          onChange={handleChange}
+          className="sm:text-sm/6 border border-gray-300 p-2 rounded-md min-h-[40px] focus:ring-indigo-500 focus:border-indigo-500"
+          disabled={disabled}
+        />
+      )}
       {errors[name] && <div className="text-xs font-medium text-red-500 mt-1">{errors[name]}</div>}
     </div>
   );
+
 
   const renderPasswordFields = () => (
     <>
@@ -206,7 +225,7 @@ const ProfessorProfileForm = ({ professorProfile, setProfessorProfile, setIsEdit
               disabled
             />
           </div>
-          {renderInputField('Biography', 'bio')}
+          {renderInputField('Biography', 'bio', 'text', false, true)}
           {renderDepartmentAndCoursesDropdown()}
 
           <div className="flex items-center space-x-1 mt-3">

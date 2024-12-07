@@ -14,7 +14,7 @@ import SignUpForm from './pages/auth/SignUpForm';
 
 import StudentProfile from './pages/profile/Student/StudentProfile';
 import ProfessorProfile from './pages/profile/Professor/ProfessorProfile';
-import AdminProfile from './pages/profile/AdminProfile';
+import AdminProfile from './pages/profile/Admin/AdminProfile';
 
 //  SERVICES
 import AuthServices from '../services/AuthServices'
