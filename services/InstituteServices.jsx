@@ -33,4 +33,33 @@ const indexInstitutes = async (page, limit, name = '') => {
   }
 };
 
-export default { indexInstitutes };
+const getInstitute = async (id) => {
+  try {
+    const url = new URL(`${BASE_URL}/institutes/${id}`);
+
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Request failed with status ${res.status}`);
+    }
+
+    const json = await res.json();
+
+    if (json.error) {
+      throw new Error(json.error);
+    }
+
+    return json;
+
+  } catch (error) {
+    console.error("Error fetching institute:", error);
+    return { institute: null };
+  }
+};
+
+export default { indexInstitutes, getInstitute };

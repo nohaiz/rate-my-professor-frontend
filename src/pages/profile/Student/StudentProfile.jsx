@@ -23,7 +23,7 @@ const StudentProfile = () => {
       }
     }
     fetchStudentProfile()
-  }, [id, studentProfile])
+  }, [id])
 
   const showProfile = () => {
     setProfileVisible(true)
@@ -115,41 +115,34 @@ const StudentProfile = () => {
               ) :
                 <>
                   <section>
-                    <div className="mt-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div className="text-sm font-medium text-gray-900">Full Name</div>
-                        <div className="text-sm text-gray-700 sm:col-span-2">
-                          {firstName} {lastName}
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-                        <div className="text-sm font-medium text-gray-900">Email Address</div>
-                        <div className="text-sm text-gray-700 sm:col-span-2">
-                          {studentProfile.email}
-                        </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3">
+                      <div className="text-sm font-medium text-gray-900">Full Name</div>
+                      <div className="text-sm text-gray-700 sm:col-span-2">
+                        {firstName} {lastName}
                       </div>
                     </div>
-                  </section>
-
-                  <section className="mt-8">
-                    <div className="mt-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div className="text-sm font-medium text-gray-900">Institution</div>
-                        <div className="text-sm text-gray-700 sm:col-span-2">
-                          {institution.name || "Not Provided"}
-                        </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 mt-4">
+                      <div className="text-sm font-medium text-gray-900">Email Address</div>
+                      <div className="text-sm text-gray-700 sm:col-span-2">
+                        {studentProfile.email}
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-                        <div className="text-sm font-medium text-gray-900">Field of Study</div>
-                        <div className="text-sm text-gray-700 sm:col-span-2">
-                          {fieldOfStudy || "Not Provided"}
-                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 mt-4">
+                      <div className="text-sm font-medium text-gray-900">Institution</div>
+                      <div className="text-sm text-gray-700 sm:col-span-2">
+                        {institution.name || "Not Provided"}
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
-                        <div className="text-sm font-medium text-gray-900">GPA</div>
-                        <div className="text-sm text-gray-700 sm:col-span-2">
-                          {GPA || "Not Available"}
-                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 mt-4">
+                      <div className="text-sm font-medium text-gray-900">Field of Study</div>
+                      <div className="text-sm text-gray-700 sm:col-span-2">
+                        {fieldOfStudy || "Not Provided"}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 mt-4">
+                      <div className="text-sm font-medium text-gray-900">GPA</div>
+                      <div className="text-sm text-gray-700 sm:col-span-2">
+                        {GPA || "Not Available"}
                       </div>
                     </div>
                   </section>

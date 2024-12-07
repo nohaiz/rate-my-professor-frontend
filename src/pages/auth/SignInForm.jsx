@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, {  useState } from "react";
 import AuthServices from "../../../services/AuthServices";
 
 const SignInForm = () => {
@@ -9,8 +9,22 @@ const SignInForm = () => {
   const [otp, setOtp] = useState("");
   const [qrCodeUrl, setQrCodeUrl] = useState("");
 
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
   const handleSignIn = async (e) => {
+    setError("");
     e.preventDefault();
+
+    if (!emailRegex.test(email)) {
+      setError("Please provide a valid email address.");
+      return;
+    }
+
+    if (!passwordRegex.test(password)) {
+      setError("Please ensure your password meets the requirements.");
+      return;
+    }
 
     try {
       const response = await AuthServices.signin({
@@ -24,7 +38,7 @@ const SignInForm = () => {
         setIs2FAEnabled(true);
       }
     } catch (err) {
-      setError("Error: " + err.message);
+      setError("An error occurred during sign in.");
     }
   };
 
@@ -43,7 +57,7 @@ const SignInForm = () => {
         window.location.href = "/";
       }
     } catch (err) {
-      setError("Invalid OTP or error: " + err.message);
+      setError("Invalid OTP or error occurred.");
     }
   };
 
@@ -58,25 +72,34 @@ const SignInForm = () => {
           <div>
             <label className="block text-sm font-medium text-gray-800 mb-2">Email:</label>
             <input
-              type="email"
+              type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm/6"
             />
+            {error && error.includes("email") && (
+              <div className="text-xs text-red-500 mt-1">{error}</div>
+            )}
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-800 mb-2">Password:</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm/6"
             />
+            {error && error.includes("password") && (
+              <div className="text-xs text-red-500 mt-1">{error}</div>
+            )}
           </div>
 
-          {error && <div className="text-red-500 text-sm">{error}</div>}
+          {error && !error.includes("password") && !error.includes("email") && (
+            <div className="bg-red-100 text-red-700 p-3 rounded-md shadow-md text-sm">
+              <strong>Error:</strong> {error}
+            </div>
+          )}
 
           <button
             type="submit"
@@ -87,14 +110,12 @@ const SignInForm = () => {
         </form>
       ) : (
         <div className="space-y-6 mt-6">
-          {qrCodeUrl === '' ?
-            <></>
-            :
+          {qrCodeUrl && (
             <>
               <h3 className="text-lg font-semibold text-gray-900 text-center">Scan the QR Code to Set Up Google Authenticator</h3>
               <img src={qrCodeUrl} alt="QR Code for 2FA" className="mx-auto" />
             </>
-          }
+          )}
 
           <form onSubmit={handleOtpSubmit} className="space-y-6 mt-6">
             <div>
@@ -103,11 +124,13 @@ const SignInForm = () => {
                 type="text"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm/6"
               />
+              {error && error.includes("OTP") && (
+                <div className="text-xs text-red-500 mt-1">{error}</div>
+              )}
             </div>
-            {error && <div className="text-red-500 text-sm">{error}</div>}
+
             <button
               type="submit"
               className="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-300"

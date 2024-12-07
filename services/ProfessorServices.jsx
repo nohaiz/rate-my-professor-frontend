@@ -33,4 +33,59 @@ const indexProfessors = async (page, limit, name = '') => {
   }
 };
 
-export default { indexProfessors };
+const addProfessorCourse = async (id, institution, selectedDepartment, selectedCourse) => {
+  try {
+    const res = await fetch(`${BASE_URL}/professors/${id}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ institution, selectedDepartment, selectedCourse }),
+    });
+    if (!res.ok) {
+      throw new Error(`Request failed with status ${res.status}`);
+    }
+
+    const json = await res.json();
+    if (json.error) {
+      throw new Error(json.error);
+    }
+
+    return json;
+
+  } catch (error) {
+    console.error("Error updating professor's course:", error);
+    return { message: "Failed to update professor's course" };
+  }
+};
+
+const removeProfessorCourse = async (id, institution, selectedDepartment, selectedCourse) => {
+  try {
+    const res = await fetch(`${BASE_URL}/professors/${id}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ institution, selectedDepartment, selectedCourse }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Request failed with status ${res.status}`);
+    }
+
+    const json = await res.json();
+    if (json.error) {
+      throw new Error(json.error);
+    }
+
+    return json;
+
+  } catch (error) {
+    console.error("Error removing professor's course:", error);
+    return { message: "Failed to remove professor from the course" };
+  }
+};
+
+export default { indexProfessors, addProfessorCourse, removeProfessorCourse };
