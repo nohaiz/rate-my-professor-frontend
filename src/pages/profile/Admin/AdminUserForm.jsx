@@ -25,7 +25,6 @@ const AdminUserForm = ({ setUserFormVisible, editUserId, setSuccessMessage, setE
     isProfessor: false,
     isAdmin: false,
   });
-
   useEffect(() => {
     if (editUserId) {
       const fetchUser = async () => {
@@ -132,7 +131,6 @@ const AdminUserForm = ({ setUserFormVisible, editUserId, setSuccessMessage, setE
 
   const handleCancel = () => {
     setUserFormVisible(false);
-
   }
 
   const handleSubmit = async (e) => {

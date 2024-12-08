@@ -9,7 +9,26 @@ const ManageUsers = () => {
   const [isUserFormVisible, setUserFormVisible] = useState(false);
   const [editUserId, setEditUserId] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [filterUserRole, setFilterUserRole] = useState([]);
 
+  const filterAdmins = () => {
+    const filteredAdmins = users.filter(user => user.adminAccount);
+    setFilterUserRole(filteredAdmins);
+  };
+
+  const filterStudents = () => {
+    const filteredStudents = users.filter(user => user.studentAccount);
+    setFilterUserRole(filteredStudents);
+  };
+
+  const filterProfessors = () => {
+    const filteredProfessors = users.filter(user => user.professorAccount);
+    setFilterUserRole(filteredProfessors);
+  };
+
+  const clearFilter = () => {
+    setFilterUserRole([]);
+  };
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -26,18 +45,17 @@ const ManageUsers = () => {
   useEffect(() => {
     window.scrollTo({
       top: 0,
-      behavior: 'smooth'  
+      behavior: 'smooth'
     });
   }, [users]);
-  
 
   const renderCreateUserForm = () => {
     setUserFormVisible(true);
   };
 
   const renderEditUserForm = (userId) => {
-    setEditUserId(userId)
-    setUserFormVisible(true)
+    setEditUserId(userId);
+    setUserFormVisible(true);
   };
 
   const handleDeleteUser = async (userId) => {
@@ -51,18 +69,21 @@ const ManageUsers = () => {
     }
   };
 
+  const displayedUsers = filterUserRole.length > 0 ? filterUserRole : users;
+
   return (
     <div className="space-y-3">
       {isUserFormVisible ? (
-        <AdminUserForm setUserFormVisible={setUserFormVisible} editUserId={editUserId} setSuccessMessage={setSuccessMessage} setEditUserId={setEditUserId}/>
+        <AdminUserForm setUserFormVisible={setUserFormVisible} editUserId={editUserId} setSuccessMessage={setSuccessMessage} setEditUserId={setEditUserId} />
       ) : (
         <>
-          <div className="flex justify-between items-center mb-4 ml-5">
-            <div>
+          <div className="flex justify-between items-center mb-6 ml-6">
+            <div className="flex flex-col space-y-2">
               <h3 className="text-lg font-semibold text-gray-900">Users Management</h3>
               <p className="text-sm text-gray-600 mt-1">
                 A comprehensive list of all users' accounts, including their email, name, role, and other relevant details.
               </p>
+
               {successMessage && (
                 <div className="bg-green-100 text-green-700 text-sm font-medium rounded-full py-2 px-6 mt-2">
                   {successMessage}
@@ -76,9 +97,26 @@ const ManageUsers = () => {
               Create User
             </button>
           </div>
+          <div className="flex flex-wrap gap-2">
+            <button onClick={filterAdmins} className="rounded-full py-2 px-6 text-sm font-medium transition duration-200 ease-in-out hover:bg-indigo-100 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-gray-900">
+              View All Admins
+            </button>
+            <button onClick={filterProfessors} className="rounded-full py-2 px-6 text-sm font-medium transition duration-200 ease-in-out hover:bg-indigo-100 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-900">
+              View All Professors
+            </button>
 
-          <div className="max-w-full mt-5">
-            <div className="overflow-x-auto">
+            <button onClick={filterStudents} className="rounded-full py-2 px-6 text-sm font-medium transition duration-200 ease-in-out hover:bg-indigo-100 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-900">
+              View All Students
+            </button>
+
+            <button onClick={clearFilter} className="rounded-full py-2 px-6 text-sm font-medium transition duration-200 ease-in-out hover:bg-indigo-100 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-900">
+              Clear Filter
+            </button>
+          </div>
+
+
+          <div className="max-w-full ">
+            <div className="overflow-x-auto mt-5">
               <table className="w-full table-auto text-sm">
                 <thead className="bg-white text-sm text-gray-700 font-thin">
                   <tr>
@@ -91,7 +129,7 @@ const ManageUsers = () => {
                   </tr>
                 </thead>
                 <tbody className="text-gray-700">
-                  {users.map((user) => {
+                  {displayedUsers.map((user) => {
                     const admin = user.adminAccount;
                     const professor = user.professorAccount;
                     const student = user.studentAccount;
