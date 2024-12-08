@@ -47,7 +47,7 @@ function App() {
           ) : user.role === "professor" ? (
             <Route path="/profile/:id" element={<ProfessorProfile handleSignout={handleSignout} />} />
           ) : (
-            <Route path="/profile/:id" element={<AdminProfile handleSignout={handleSignout}/>} />
+            <Route path="/dashboard/:id" element={<AdminProfile handleSignout={handleSignout} />} />
           )
         ) : <></>}
 

@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AuthServices from "../../../services/AuthServices";
+import InstituteServices from "../../../services/InstituteServices";
 
 const SignUpForm = () => {
   const [email, setEmail] = useState("");
@@ -10,19 +11,49 @@ const SignUpForm = () => {
   const [isStudent, setIsStudent] = useState(false);
   const [isProfessor, setIsProfessor] = useState(false);
   const [institution, setInstitution] = useState("");
+  const [institutes, setInstitutes] = useState([]);
   const [is2FAEnabled, setIs2FAEnabled] = useState(false);
   const [otp, setOtp] = useState("");
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
+
   const [qrCodeUrl, setQrCodeUrl] = useState("");
+
+  useEffect(() => {
+    const fetchInstitutes = async () => {
+      try {
+        const response = await InstituteServices.indexInstitutes();
+        if (response && Array.isArray(response.institutions)) {
+          setInstitutes(response.institutions);
+        } else {
+          setInstitutes([]);
+        }
+      } catch (error) {
+        setInstitutes([]);
+      }
+    };
+    fetchInstitutes();
+  }, []);
+
+  const validateSignUpForm = () => {
+    const newErrors = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!firstName.trim()) newErrors.firstName = "First name is required";
+    if (!lastName.trim()) newErrors.lastName = "Last name is required";
+    if (!email.trim()) newErrors.email = "Email is required";
+    else if (!emailRegex.test(email)) newErrors.email = "Invalid email format";
+    if (!password.trim()) newErrors.password = "Password is required";
+    if (password !== confirmPassword) newErrors.confirmPassword = "Passwords do not match";
+    if (isProfessor && !institution) newErrors.institution = "Please select an institution";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSignUp = async (e) => {
     e.preventDefault();
 
-    if (password.trim() !== confirmPassword.trim()) {
-      setError("Passwords do not match.");
-      return;
-    }
-    setError("");
+    if (!validateSignUpForm()) return;
 
     try {
       const response = await AuthServices.signup({
@@ -40,17 +71,21 @@ const SignUpForm = () => {
         setQrCodeUrl(response.qrCodeUrl);
       }
     } catch (err) {
-      setError("Error: " + err.message);
+      setErrors({ general: "Error: " + err.message });
     }
+  };
+
+  const validateOtp = () => {
+    const newErrors = {};
+    if (!otp.trim()) newErrors.otp = "OTP is required";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleOtpSubmit = async (e) => {
     e.preventDefault();
 
-    if (!otp) {
-      setError("Please enter the OTP.");
-      return;
-    }
+    if (!validateOtp()) return;
 
     try {
       const response = await AuthServices.verifyOtp(email, otp);
@@ -59,7 +94,7 @@ const SignUpForm = () => {
         window.location.href = "/";
       }
     } catch (err) {
-      setError("Invalid OTP or error: " + err.message);
+      setErrors({ otp: "Invalid OTP or error: " + err.message });
     }
   };
 
@@ -77,9 +112,9 @@ const SignUpForm = () => {
               type="text"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
-              required
               className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
             />
+            {errors.firstName && <div className="text-red-500 text-sm">{errors.firstName}</div>}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-800 mb-2">Last Name:</label>
@@ -87,9 +122,9 @@ const SignUpForm = () => {
               type="text"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
-              required
               className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
             />
+            {errors.lastName && <div className="text-red-500 text-sm">{errors.lastName}</div>}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-800 mb-2">Email:</label>
@@ -97,9 +132,9 @@ const SignUpForm = () => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
               className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
             />
+            {errors.email && <div className="text-red-500 text-sm">{errors.email}</div>}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-800 mb-2">Password:</label>
@@ -107,9 +142,9 @@ const SignUpForm = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
               className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
             />
+            {errors.password && <div className="text-red-500 text-sm">{errors.password}</div>}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-800 mb-2">Confirm Password:</label>
@@ -117,9 +152,9 @@ const SignUpForm = () => {
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              required
               className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
             />
+            {errors.confirmPassword && <div className="text-red-500 text-sm">{errors.confirmPassword}</div>}
           </div>
           <div className="flex items-center space-x-6">
             <div>
@@ -144,16 +179,21 @@ const SignUpForm = () => {
           {isProfessor && (
             <div>
               <label className="block text-sm font-medium text-gray-800 mb-2">Institution:</label>
-              <input
-                type="text"
-                value={institution}
+              <select
                 onChange={(e) => setInstitution(e.target.value)}
-                required
                 className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-              />
+              >
+                <option value="">Select an Institution</option>
+                {institutes.map((inst) => (
+                  <option key={inst._id} value={inst._id}>
+                    {inst.name}
+                  </option>
+                ))}
+              </select>
+              {errors.institution && <div className="text-red-500 text-sm">{errors.institution}</div>}
             </div>
           )}
-          {error && <div className="text-red-500 text-sm">{error}</div>}
+          {errors.general && <div className="text-red-500 text-sm">{errors.general}</div>}
           <button
             type="submit"
             className="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-300"
@@ -172,11 +212,10 @@ const SignUpForm = () => {
                 type="text"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
-                required
                 className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
               />
+              {errors.otp && <div className="text-red-500 text-sm">{errors.otp}</div>}
             </div>
-            {error && <div className="text-red-500 text-sm">{error}</div>}
             <button
               type="submit"
               className="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-300"

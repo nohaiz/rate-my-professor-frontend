@@ -5,12 +5,14 @@ import { AiOutlineEdit, AiOutlineClose, AiOutlineDelete } from "react-icons/ai";
 import ProfileService from "../../../../services/ProfileService";
 import AdminProfileForm from "./AdminProfileForm";
 
+import ManageUsers from "./ManageUsers";
+
 const AdminProfile = ({ handleSignout }) => {
   const { id } = useParams();
   const [adminProfile, setAdminProfile] = useState(null);
-  const [isProfileVisible, setProfileVisible] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const navigate = useNavigate()
+  const [activeTab, setActiveTab] = useState('profile');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchAdminProfile = async () => {
@@ -36,35 +38,43 @@ const AdminProfile = ({ handleSignout }) => {
   };
 
   const handleDelete = async () => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this profile?")
+    const confirmDelete = window.confirm("Are you sure you want to delete this profile?");
     if (confirmDelete) {
       try {
-        await ProfileService.deleteProfile(id)
-        alert("Profile deleted successfully.")
-        handleSignout()
-        navigate("/auth/sign-in")
+        await ProfileService.deleteProfile(id);
+        alert("Profile deleted successfully.");
+        handleSignout();
+        navigate("/auth/sign-in");
       } catch (error) {
-        console.error("Error deleting profile:", error)
-        alert("There was an error deleting the profile.")
+        console.error("Error deleting profile:", error);
+        alert("There was an error deleting the profile.");
       }
     }
-  }
+  };
 
   return (
     <div className="p-6">
-      <div className="mb-6 flex space-x-6 border-b border-gray-300 pb-2">
-        <button
-          onClick={() => setProfileVisible(true)}
-          className={`${isProfileVisible ? "border-b-2 border-indigo-500" : ""
-            } py-2 px-4 text-sm font-medium text-gray-500 transition duration-200 ease-in-out hover:text-gray-900 focus:outline-none`}
-        >
-          Admin Profile
-        </button>
+      <div className="mb-6 flex space-x-4 border-b border-gray-300 pb-2">
+        {['profile', 'dashboard', 'academic', 'reporting'].map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`${activeTab === tab
+              ? "bg-indigo-500 text-white"
+              : "bg-transparent text-gray-600"} 
+              rounded-full py-2 px-6 text-sm font-medium transition duration-200 ease-in-out hover:bg-indigo-100 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500`}
+          >
+            {tab === 'profile' && 'Admin Profile'}
+            {tab === 'dashboard' && 'User Dashboard'}
+            {tab === 'academic' && 'Academic Dashboard'}
+            {tab === 'reporting' && 'Reporting & Moderation'}
+          </button>
+        ))}
       </div>
 
-      {adminAccount && (
+      {adminProfile && (
         <>
-          {isProfileVisible ? (
+          {activeTab === 'profile' && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -119,19 +129,25 @@ const AdminProfile = ({ handleSignout }) => {
                         {adminProfile.email}
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 mt-4">
-                      <div className="text-sm font-medium text-gray-900">Password</div>
-                      <div className="text-sm text-gray-700 sm:col-span-2">
-                        {"********"}
-                      </div>
-                    </div>
                   </section>
                 </>
               )}
             </div>
-          ) : (
+          )}
+
+          {activeTab === 'dashboard' && (
+            <>
+              <ManageUsers activeTab={activeTab} />
+            </>
+          )}
+          {activeTab === 'academic' && (
             <section className="space-y-6">
-              <h3 className="text-base font-semibold text-gray-900">No other details available</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Academic Dashboard</h3>
+            </section>
+          )}
+          {activeTab === 'reporting' && (
+            <section className="space-y-6">
+              <h3 className="text-lg font-semibold text-gray-900">Reporting & Moderation</h3>
             </section>
           )}
         </>

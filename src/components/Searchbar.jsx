@@ -81,7 +81,7 @@ const Searchbar = ({ submittedSearch }) => {
     <div className="max-w-4xl mx-auto p-4 space-y-4 flex flex-col items-center">
       <div>
         <label htmlFor={searchType} className="block text-lg font-semibold text-gray-700">
-          Enter your {searchType} name to begin.
+          {searchType === 'institutes' ? 'Enter your school to get started' : 'Find a professor'}
         </label>
       </div>
 
@@ -93,14 +93,14 @@ const Searchbar = ({ submittedSearch }) => {
           onChange={handleQueryChange}
           onFocus={() => setIsSearchActive(true)}
           onBlur={handleBlur}
-          className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="sm:text-sm/6 w-full px-3 py-2 border border-gray-300 rounded-md shadow-focus:ring-indigo-500 focus:border-indigo-500"
           placeholder={`Search ${searchType.charAt(0).toUpperCase() + searchType.slice(1)} Name`}
         />
 
         <select
           onChange={handleSearchTypeChange}
           value={searchType}
-          className="w-1/2 p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="sm:text-sm/6 w-1/2 px-3 py-2 border border-gray-300 rounded-md shadow-focus:ring-indigo-500 focus:border-indigo-900"
         >
           <option value="institutes">Institutes</option>
           <option value="professors">Professors</option>
@@ -108,13 +108,13 @@ const Searchbar = ({ submittedSearch }) => {
 
         <button
           onClick={handleSearch}
-          className="w-1/3 py-2 px-4 bg-indigo-600 text-white font-semibold rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="bg-indigo-500 text-white text-sm font-medium rounded-full py-2 px-8 hover:bg-indigo-600"
         >
           Search
         </button>
 
         {isSearchActive && suggestions.length > 0 && (
-          <ul className="absolute mt-2 border border-gray-300 rounded-md max-h-48 overflow-y-auto w-full bg-white z-10 top-full left-0">
+          <ul className="absolute mt-3 border border-gray-300 rounded-md max-h-48 overflow-y-auto w-full bg-white z-10 top-full left-0">
             {suggestions.map((suggestion, index) => (
               <li
                 key={index}

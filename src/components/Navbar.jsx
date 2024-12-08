@@ -4,6 +4,9 @@ import { useState } from "react";
 const Navbar = ({ user, handleSignout }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Treat unauthenticated users as "guests"
+  const isGuest = !user;
+
   return (
     <header className="bg-white">
       <nav className="mx-auto flex items-center justify-between p-6 lg:px-8" aria-label="Global">
@@ -32,9 +35,9 @@ const Navbar = ({ user, handleSignout }) => {
               aria-hidden="true"
             >
               <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
                 d="M4 6h16M4 12h16M4 18h16"
               />
             </svg>
@@ -42,19 +45,26 @@ const Navbar = ({ user, handleSignout }) => {
         </div>
 
         <div className="hidden lg:flex lg:flex-1 lg:justify-center space-x-8">
-          <Link
-            to="/institutes"
-            className="text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
-          >
-            Institution
-          </Link>
-          <Link
-            to="/professors"
-            className="text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
-          >
-            Professor
-          </Link>
-          {user && (
+          {/* Render Institution and Professor links for students, professors, and guests */}
+          {(user?.role === "professor" || user?.role === "student" || isGuest) && (
+            <>
+              <Link
+                to="/institutes"
+                className="text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
+              >
+                Institution
+              </Link>
+              <Link
+                to="/professors"
+                className="text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
+              >
+                Professor
+              </Link>
+            </>
+          )}
+
+          {/* Render Profile link for professors and students */}
+          {user && (user?.role === "professor" || user?.role === "student") && (
             <Link
               to={`/profile/${user.Id}`}
               className="text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
@@ -62,9 +72,11 @@ const Navbar = ({ user, handleSignout }) => {
               Profile
             </Link>
           )}
-          {user?.role === 'admin' && (
+
+          {/* Render Dashboard link for admin */}
+          {user && user?.role === "admin" && (
             <Link
-              to="/dashboard"
+              to={`/dashboard/${user.Id}`}
               className="text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
             >
               Dashboard
@@ -73,6 +85,7 @@ const Navbar = ({ user, handleSignout }) => {
         </div>
 
         <div className="hidden lg:flex lg:flex-1 lg:justify-end space-x-4">
+          {/* Render Sign In/Sign Up for guests, and Sign Out for authenticated users */}
           {user ? (
             <button
               onClick={handleSignout}
@@ -104,19 +117,26 @@ const Navbar = ({ user, handleSignout }) => {
         id="mobile-menu"
       >
         <div className="space-y-1 px-2 pt-2 pb-3 sm:px-3">
-          <Link
-            to="/institutes"
-            className="block w-full text-left text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
-          >
-            Institution
-          </Link>
-          <Link
-            to="/professors"
-            className="block w-full text-left text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
-          >
-            Professor
-          </Link>
-          {user && (
+          {/* Render Institution and Professor links for students, professors, and guests */}
+          {(user?.role === "professor" || user?.role === "student" || isGuest) && (
+            <>
+              <Link
+                to="/institutes"
+                className="block w-full text-left text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
+              >
+                Institution
+              </Link>
+              <Link
+                to="/professors"
+                className="block w-full text-left text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
+              >
+                Professor
+              </Link>
+            </>
+          )}
+
+          {/* Render Profile link for professors and students */}
+          {user && (user?.role === "professor" || user?.role === "student") && (
             <Link
               to={`/profile/${user.Id}`}
               className="block w-full text-left text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
@@ -124,9 +144,11 @@ const Navbar = ({ user, handleSignout }) => {
               Profile
             </Link>
           )}
-          {user?.type?.role === 'admin' && (
+
+          {/* Render Dashboard link for admin */}
+          {user && user?.role === "admin" && (
             <Link
-              to="/dashboard"
+              to={`/dashboard/${user.Id}`}
               className="block w-full text-left text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
             >
               Dashboard
@@ -135,6 +157,7 @@ const Navbar = ({ user, handleSignout }) => {
         </div>
 
         <div className="space-y-1 px-2 pt-2 pb-3 sm:px-3 border-t border-gray-200">
+          {/* Render Sign In/Sign Up for guests, and Sign Out for authenticated users */}
           {user ? (
             <button
               onClick={handleSignout}
