@@ -62,4 +62,97 @@ const getInstitute = async (id) => {
   }
 };
 
-export default { indexInstitutes, getInstitute };
+const deleteInstitute = async (id) => {
+  try {
+    const url = new URL(`${BASE_URL}/admin/institutes/${id}`);
+
+    const res = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Request failed with status ${res.status}`);
+    }
+
+    const json = await res.json();
+
+    if (json.error) {
+      throw new Error(json.error);
+    }
+
+    return json;
+
+  } catch (error) {
+    console.error("Error deleting institute:", error);
+    return { success: false, message: error.message };
+  }
+};
+
+// New createInstitute function
+const createInstitute = async (data) => {
+  try {
+    const url = new URL(`${BASE_URL}/admin/institutes`);
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),  // Data to create the new institute
+    });
+
+    if (!res.ok) {
+      throw new Error(`Request failed with status ${res.status}`);
+    }
+
+    const json = await res.json();
+
+    if (json.error) {
+      throw new Error(json.error);
+    }
+
+    return json;
+
+  } catch (error) {
+    console.error("Error creating institute:", error);
+    return { success: false, message: error.message };
+  }
+};
+
+// New updateInstitute function
+const updateInstitute = async (id, data) => {
+  try {
+    const url = new URL(`${BASE_URL}/admin/institutes/${id}`);
+
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),  // Data to update the existing institute
+    });
+
+    if (!res.ok) {
+      throw new Error(`Request failed with status ${res.status}`);
+    }
+
+    const json = await res.json();
+
+    if (json.error) {
+      throw new Error(json.error);
+    }
+
+    return json;
+
+  } catch (error) {
+    console.error("Error updating institute:", error);
+    return { success: false, message: error.message };
+  }
+};
+
+export default { indexInstitutes, getInstitute, deleteInstitute, createInstitute, updateInstitute };

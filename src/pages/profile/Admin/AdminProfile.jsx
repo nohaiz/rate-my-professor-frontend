@@ -6,6 +6,7 @@ import ProfileService from "../../../../services/ProfileService";
 import AdminProfileForm from "./AdminProfileForm";
 
 import ManageUsers from "./ManageUsers";
+import ManageAcademics from "./ManageAcademics";
 
 const AdminProfile = ({ handleSignout }) => {
   const { id } = useParams();
@@ -137,12 +138,12 @@ const AdminProfile = ({ handleSignout }) => {
 
           {activeTab === 'dashboard' && (
             <>
-              <ManageUsers activeTab={activeTab} />
+              <ManageUsers />
             </>
           )}
           {activeTab === 'academic' && (
             <section className="space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900">Academic Dashboard</h3>
+              <ManageAcademics  />
             </section>
           )}
           {activeTab === 'reporting' && (

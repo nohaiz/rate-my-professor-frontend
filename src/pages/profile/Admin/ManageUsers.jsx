@@ -10,7 +10,10 @@ const ManageUsers = () => {
   const [editUserId, setEditUserId] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [filterUserRole, setFilterUserRole] = useState([]);
+  const [searchQuery, setSearchQuery] = useState(''); // Search query state
+  const [filteredUsers, setFilteredUsers] = useState([]); // Filtered users state
 
+  // Filter users by role
   const filterAdmins = () => {
     const filteredAdmins = users.filter(user => user.adminAccount);
     setFilterUserRole(filteredAdmins);
@@ -30,6 +33,7 @@ const ManageUsers = () => {
     setFilterUserRole([]);
   };
 
+  // Fetch users from API
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -42,6 +46,21 @@ const ManageUsers = () => {
     fetchUsers();
   }, [isUserFormVisible]);
 
+  // Apply both search and role filters here
+  useEffect(() => {
+    let filteredList = filterUserRole.length > 0 ? filterUserRole : users;
+
+    // Filter by email search query
+    if (searchQuery) {
+      filteredList = filteredList.filter(user =>
+        user.email.toLowerCase().includes(searchQuery.toLowerCase()) // Only filter by email
+      );
+    }
+
+    setFilteredUsers(filteredList);
+  }, [searchQuery, users, filterUserRole]); // Re-run filtering on search query, users, or role filters
+
+  // Scroll to top when users change
   useEffect(() => {
     window.scrollTo({
       top: 0,
@@ -49,15 +68,18 @@ const ManageUsers = () => {
     });
   }, [users]);
 
+  // Show user form for creating new user
   const renderCreateUserForm = () => {
     setUserFormVisible(true);
   };
 
+  // Show user form for editing an existing user
   const renderEditUserForm = (userId) => {
     setEditUserId(userId);
     setUserFormVisible(true);
   };
 
+  // Handle deleting a user
   const handleDeleteUser = async (userId) => {
     try {
       await ManageUsersServices.deleteUser(userId);
@@ -69,26 +91,28 @@ const ManageUsers = () => {
     }
   };
 
-  const displayedUsers = filterUserRole.length > 0 ? filterUserRole : users;
+  // Users to be displayed after applying role filter and search filter
+  const displayedUsers = filteredUsers;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {isUserFormVisible ? (
         <AdminUserForm setUserFormVisible={setUserFormVisible} editUserId={editUserId} setSuccessMessage={setSuccessMessage} setEditUserId={setEditUserId} />
       ) : (
         <>
           <div className="flex justify-between items-center mb-6 ml-6">
             <div className="flex flex-col space-y-2">
-              <h3 className="text-lg font-semibold text-gray-900">Users Management</h3>
+              <div className="flex items-center">
+                <h3 className="text-lg font-semibold text-gray-900">Users Management</h3>
+                {successMessage && (
+                  <div className="text-green-400 text-sm font-medium ml-4 flex justify-center items-center">
+                    {successMessage}
+                  </div>
+                )}
+              </div>
               <p className="text-sm text-gray-600 mt-1">
                 A comprehensive list of all users' accounts, including their email, name, role, and other relevant details.
               </p>
-
-              {successMessage && (
-                <div className="bg-green-100 text-green-700 text-sm font-medium rounded-full py-2 px-6 mt-2">
-                  {successMessage}
-                </div>
-              )}
             </div>
             <button
               onClick={renderCreateUserForm}
@@ -97,23 +121,47 @@ const ManageUsers = () => {
               Create User
             </button>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <button onClick={filterAdmins} className="rounded-full py-2 px-6 text-sm font-medium transition duration-200 ease-in-out hover:bg-indigo-100 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-gray-900">
+
+          {/* Search Box */}
+          <div className="mb-6 ml-4">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Find by email address"
+              className="sm:text-sm/6 px-4 py-2 border rounded-full w-80 mb-4"
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-2 ml-4">
+            <button
+              onClick={filterAdmins}
+              className="bg-indigo-500 text-white text-sm font-medium rounded-full py-2 px-6 mr-3 hover:bg-indigo-600 focus:ring-2 focus:ring-indigo-900"
+            >
               View All Admins
             </button>
-            <button onClick={filterProfessors} className="rounded-full py-2 px-6 text-sm font-medium transition duration-200 ease-in-out hover:bg-indigo-100 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-900">
+
+            <button
+              onClick={filterProfessors}
+              className="bg-indigo-500 text-white text-sm font-medium rounded-full py-2 px-6 mr-3 hover:bg-indigo-600 focus:ring-2 focus:ring-indigo-900"
+            >
               View All Professors
             </button>
 
-            <button onClick={filterStudents} className="rounded-full py-2 px-6 text-sm font-medium transition duration-200 ease-in-out hover:bg-indigo-100 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-900">
+            <button
+              onClick={filterStudents}
+              className="bg-indigo-500 text-white text-sm font-medium rounded-full py-2 px-6 mr-3 hover:bg-indigo-600 focus:ring-2 focus:ring-indigo-900"
+            >
               View All Students
             </button>
 
-            <button onClick={clearFilter} className="rounded-full py-2 px-6 text-sm font-medium transition duration-200 ease-in-out hover:bg-indigo-100 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-900">
+            <button
+              onClick={clearFilter}
+              className="bg-gray-500 text-white text-sm font-medium rounded-full py-2 px-6 mr-3 hover:bg-gray-600 focus:ring-2 focus:ring-indigo-900"
+            >
               Clear Filter
             </button>
           </div>
-
 
           <div className="max-w-full ">
             <div className="overflow-x-auto mt-5">
@@ -140,7 +188,7 @@ const ManageUsers = () => {
                         ? professor.firstName
                         : student
                           ? student.firstName
-                          : "-";
+                          : "Empty";
 
                     const lastName = admin
                       ? admin.lastName
@@ -148,7 +196,7 @@ const ManageUsers = () => {
                         ? professor.lastName
                         : student
                           ? student.lastName
-                          : "-";
+                          : "Empty";
 
                     const role = admin
                       ? "Admin"
@@ -156,13 +204,14 @@ const ManageUsers = () => {
                         ? "Professor"
                         : student
                           ? "Student"
-                          : "-";
+                          : "Empty";
 
                     const institution = professor
-                      ? professor.institution.name
+                      ? professor.institution?.name || "Empty"  
                       : student
-                        ? student.institution?.name || "-"
-                        : "-";
+                        ? student.institution?.name || "Empty"  
+                        : "Empty";  
+
 
                     return (
                       <tr key={user._id} className="border-b">
