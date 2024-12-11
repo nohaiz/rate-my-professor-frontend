@@ -12,16 +12,16 @@ import CourseForm from "./CourseForm";
 
 const ManageAcademics = () => {
   const [entities, setEntities] = useState([]);
-  const [searchQuery, setSearchQuery] = useState(""); // Search query state
-  const [filteredEntities, setFilteredEntities] = useState([]); // State for filtered entities
-  const [entityType, setEntityType] = useState("Institute");
-  const [entityMaxItems, setEntityMaxItems] = useState({}); // Track maxItems for each entity
-  const [successMessage, setSuccessMessage] = useState(""); // Success message state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredEntities, setFilteredEntities] = useState([]);
+  const [entityType, setEntityType] = useState("Course");
+  const [entityMaxItems, setEntityMaxItems] = useState({});
+  const [successMessage, setSuccessMessage] = useState("");
   const [showForm, setShowForm] = useState(false)
-  const [deptList, setDeptList] = useState([])
-  const [courseList, setCourseList] = useState([])
-  const [editEntity, setEditEntity] = useState(null)
-  const hasScrolled = useRef(false); // Track if the scroll has been triggered
+  const [deptList, setDeptList] = useState([]);
+  const [courseList, setCourseList] = useState([]);
+  const [editEntity, setEditEntity] = useState(null);
+  const hasScrolled = useRef(false);
 
   useEffect(() => {
     const fetchEntities = async () => {
@@ -29,16 +29,16 @@ const ManageAcademics = () => {
         let response;
         if (entityType === "Institute") {
           response = await InstituteServices.indexInstitutes();
-          setEntities(response.institutions);
+          setEntities(response.institutions || []);
         } else if (entityType === "Department") {
           response = await DepartmentService.indexDepartments();
-          setEntities(response.departments);
+          setEntities(response.departments || []);
         } else if (entityType === "Course") {
           response = await CourseServices.indexCourses();
-          setEntities(response.courses);
+          setEntities(response.courses || []);
         }
       } catch (error) {
-        console.error(error);
+        console.error(error)
       }
     };
 
@@ -49,23 +49,23 @@ const ManageAcademics = () => {
     const fetchDepartments = async () => {
       try {
         const response = await DepartmentService.indexDepartments();
-        setDeptList(response.departments);
+        setDeptList(response.departments || []);
       } catch (error) {
-        console.error("Error fetching departments:", error);
+        console.error(error)
       }
     };
 
     const fetchCourses = async () => {
       try {
         const response = await CourseServices.indexCourses()
-        setCourseList(response.courses);
+        setCourseList(response.courses || []);
       } catch (error) {
-        console.error("Error fetching courses:", error);
+        console.error(error)
       }
     };
     fetchCourses();
     fetchDepartments();
-  }, []);
+  }, [filteredEntities]);
 
   useEffect(() => {
     if (successMessage && !hasScrolled.current) {
@@ -104,10 +104,23 @@ const ManageAcademics = () => {
   const handleCancelForm = () => {
     setShowForm(false);
   };
+  const disableCreateBtn = () => {
+    if (entityType === "Institute" && deptList.length === 0) {
+      return true;
+    } else if (entityType === "Department" && courseList.length === 0) {
+      return true;
+    }
+    return false;
+  };
+  const createButtonClass = () => {
+    if (disableCreateBtn()) {
+      return "bg-gray-400 text-gray-500 cursor-not-allowed";
+    }
+    return "bg-indigo-500 text-white hover:bg-indigo-600 cursor-pointer";
+  };
+
   const handleSaveEntity = (newEntity) => {
-    console.log(newEntity)
     if (editEntity) {
-      console.log(newEntity, 2)
       setEntities((prevEntities) =>
         prevEntities.map((entity) =>
           entity._id === newEntity._id ? newEntity : entity
@@ -115,23 +128,19 @@ const ManageAcademics = () => {
       );
       setEditEntity(null)
     } else {
-      console.log(newEntity, 3)
       setEntities((prevEntities) => [newEntity, ...prevEntities]);
     }
     setShowForm(false);
   };
-
 
   const handleEditEntity = (entity) => {
     setEditEntity(entity)
     setShowForm(true);
   }
 
-
-  // Filter entities based on the search query
   useEffect(() => {
     if (searchQuery.trim() === "") {
-      setFilteredEntities(entities); // Show all entities if no search query
+      setFilteredEntities(entities);
     } else {
       const lowercasedQuery = searchQuery.toLowerCase();
       const filtered = entities.filter((entity) => {
@@ -140,7 +149,6 @@ const ManageAcademics = () => {
         } else if (entityType === "Department") {
           return entity.name.toLowerCase().includes(lowercasedQuery);
         } else if (entityType === "Course") {
-          // For courses, check the title and possibly other fields like code
           return (
             entity.title.toLowerCase().includes(lowercasedQuery) ||
             (entity.code && entity.code.toLowerCase().includes(lowercasedQuery))
@@ -152,23 +160,20 @@ const ManageAcademics = () => {
     }
   }, [searchQuery, entities, entityType]);
 
-  // Handle the search input change
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
 
-  // Change the entity view (Institute, Department, Course)
   const changeEntityView = (type) => {
     setEntityType(type);
-    setSearchQuery(""); // Reset the search when changing entity view
-    setEntityMaxItems({}); // Reset maxItems for all entities
+    setSearchQuery("");
+    setEntityMaxItems({});
   };
 
-  // Handle Show More / Show Less for each entity
   const handleShowMoreLess = (entityId, entityType) => {
     setEntityMaxItems((prevMaxItems) => {
-      const currentMax = prevMaxItems[entityId] || 3; // Default to 3 if no value is set
-      const entity = entities.find((e) => e._id === entityId); // Find the specific entity
+      const currentMax = prevMaxItems[entityId] || 3;
+      const entity = entities.find((e) => e._id === entityId);
       const newMax = currentMax === 3 ? (entityType === "Department" ? entity.departments.length : entity.courses.length) : 3;
 
       return {
@@ -178,10 +183,8 @@ const ManageAcademics = () => {
     });
   };
 
-  // Render details based on the entity type
-  // Modify renderDetailsColumn to handle empty departments or courses
   const renderDetailsColumn = (entity) => {
-    const maxItems = entityMaxItems[entity._id] || 3; // Default to 3 if not set for this entity
+    const maxItems = entityMaxItems[entity?._id] || 3;
 
     if (entityType === "Institute") {
       if (entity.departments && entity.departments.length > 0) {
@@ -201,7 +204,7 @@ const ManageAcademics = () => {
           </div>
         );
       } else {
-        return <span>No associated departments</span>;
+        return <span>Empty</span>;
       }
     } else if (entityType === "Department") {
       if (entity.courses && entity.courses.length > 0) {
@@ -221,7 +224,7 @@ const ManageAcademics = () => {
           </div>
         );
       } else {
-        return <span>No associated courses</span>;
+        return <span>Empty</span>;
       }
     } else if (entityType === "Course") {
       return (
@@ -234,14 +237,13 @@ const ManageAcademics = () => {
     return <span>-</span>;
   };
 
-
   return (
     <>
       {showForm ?
         <>
           {entityType === "Institute" && <InstituteForm onCancel={handleCancelForm} onSave={handleSaveEntity} deptList={deptList} editEntity={editEntity} />}
           {entityType === "Department" && <DepartmentForm onCancel={handleCancelForm} onSave={handleSaveEntity} courseList={courseList} editEntity={editEntity} />}
-          {entityType === "Course" && <CourseForm onCancel={handleCancelForm} onSave={handleSaveEntity} editEntity={editEntity}/>}
+          {entityType === "Course" && <CourseForm onCancel={handleCancelForm} onSave={handleSaveEntity} editEntity={editEntity} />}
         </> :
         (
           <div className="space-y-5">
@@ -261,13 +263,13 @@ const ManageAcademics = () => {
               </div>
               <button
                 onClick={handleCreateClick}
-                className="bg-indigo-500 text-white text-sm font-medium rounded-full py-2 px-6 hover:bg-indigo-600"
+                disabled={disableCreateBtn()}
+                className={`${createButtonClass()} text-sm font-medium rounded-full py-2 px-6`}
               >
                 Create {entityType}
               </button>
             </div>
 
-            {/* Search Box */}
             <div className="mb-6 ml-4">
               <input
                 type="text"
@@ -280,10 +282,10 @@ const ManageAcademics = () => {
 
             <div className="flex flex-wrap gap-2 ml-4">
               <button
-                onClick={() => changeEntityView("Institute")}
+                onClick={() => changeEntityView("Course")}
                 className="bg-indigo-500 text-white text-sm font-medium rounded-full py-2 px-6 mr-4 hover:bg-indigo-600 focus:ring-2 focus:ring-indigo-900"
               >
-                Institutes
+                Courses
               </button>
               <button
                 onClick={() => changeEntityView("Department")}
@@ -292,10 +294,10 @@ const ManageAcademics = () => {
                 Departments
               </button>
               <button
-                onClick={() => changeEntityView("Course")}
-                className="bg-indigo-500 text-white text-sm font-medium rounded-full py-2 px-6 hover:bg-indigo-600 focus:ring-2 focus:ring-indigo-900"
+                onClick={() => changeEntityView("Institute")}
+                className="bg-indigo-500 text-white text-sm font-medium rounded-full py-2 px-6  hover:bg-indigo-600 focus:ring-2 focus:ring-indigo-900"
               >
-                Courses
+                Institutes
               </button>
             </div>
             <div className="overflow-x-auto mt-5">
@@ -322,7 +324,7 @@ const ManageAcademics = () => {
                   {filteredEntities.map((entity) => (
                     <tr key={entity._id} className="border-b">
                       <td className="px-6 py-4 text-gray-900 font-semibold">
-                        {entityType === "Course" ? entity.title : entity.name}
+                        {entity?.title || entity?.name}
                       </td>
                       {entityType === "Institute" && (
                         <>
