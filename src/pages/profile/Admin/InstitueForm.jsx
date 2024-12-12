@@ -1,59 +1,112 @@
 import React, { useState, useEffect } from "react";
 import { AiOutlineClose } from "react-icons/ai";
+import Select from "react-select";
 import InstituteServices from "../../../../services/InstituteServices";
 
 const InstituteForm = ({ onCancel, onSave, deptList, editEntity }) => {
   const [name, setName] = useState(editEntity ? editEntity.name : "");
   const [location, setLocation] = useState(editEntity ? editEntity.location : "");
   const [type, setType] = useState(editEntity ? editEntity.type : "");
-
-  const [departments, setDepartments] = useState(
-    editEntity && editEntity.departments ? editEntity.departments.map((dept) => dept._id) : []
+  const [departments, setDepartments] = useState([]);
+  const [selectedDepartments, setSelectedDepartments] = useState(
+    editEntity && editEntity.departments
+      ? editEntity.departments.map((department) => ({
+        value: department._id,
+        label: department.name,
+      }))
+      : []
   );
+  const [errors, setErrors] = useState({});
 
-  const [errorMessage, setErrorMessage] = useState("");
+  useEffect(() => {
+    const departmentOptions = deptList.map((dept) => ({
+      value: dept._id,
+      label: dept.name,
+    }));
+    setDepartments(departmentOptions);
+  }, [deptList]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage("");
+    setErrors({});
+
+    let isValid = true;
+    const newErrors = {};
+
+    if (!name.trim()) {
+      newErrors.name = "Institute name is required.";
+      isValid = false;
+    } else if (name.length < 3 || name.length > 50) {
+      newErrors.name = "Institute name must be between 3 and 50 characters.";
+      isValid = false;
+    } else if (!/^[a-zA-Z\s]+$/.test(name)) {
+      newErrors.name = "Institute name can only contain letters and spaces.";
+      isValid = false;
+    }
+
+    if (!location.trim()) {
+      newErrors.location = "Location is required.";
+      isValid = false;
+    } else if (location.length < 3 || location.length > 50) {
+      newErrors.location = "Location must be between 3 and 50 characters.";
+      isValid = false;
+    } else if (!/^[a-zA-Z\s]+$/.test(location)) {
+      newErrors.location = "Location can only contain letters and spaces.";
+      isValid = false;
+    }
+
+    if (!type) {
+      newErrors.type = "Institute type is required.";
+      isValid = false;
+    } else if (!["University", "College", "Community College", "Other"].includes(type)) {
+      newErrors.type = "Invalid institute type.";
+      isValid = false;
+    }
+
+    if (!isValid) {
+      setErrors(newErrors);
+      return;
+    }
+
+    const institutionData = {
+      name,
+      location,
+      type,
+      departments: selectedDepartments.map(department => department.value),
+    };
 
     try {
-      const institutionData = { name, location, type, departments };
-      if (editEntity) {
-        const response = await InstituteServices.updateInstitute(editEntity._id, institutionData);
-        onSave(response.institution);
-      } else {
-        const response = await InstituteServices.createInstitute(institutionData);
+      const response = editEntity
+        ? await InstituteServices.updateInstitute(editEntity._id, institutionData)
+        : await InstituteServices.createInstitute(institutionData);
+
+      if (response && response.status === 500) {
+        setErrors({ general: "An error occurred. Please try again later." });
+      }
+      else if (response && response.status === 400) {
+        newErrors.name = response.error;
+        setErrors(newErrors);
+      }
+      else {
         onSave(response.institution);
       }
     } catch (error) {
-      setErrorMessage(error.response?.data?.error || "An error occurred while processing the institution.");
+      console.error("Error saving department:", error);
     }
   };
-
-  const handleDepartmentChange = (e) => {
-    const departmentId = e.target.value;
-    if (e.target.checked) {
-      setDepartments([...departments, departmentId]);
-    } else {
-      setDepartments(departments.filter((id) => id !== departmentId));
-    }
-  };
-
-  useEffect(() => {
-    if (editEntity && editEntity.departments) {
-      setDepartments(editEntity.departments.map((dept) => dept._id));
-    }
-  }, [editEntity]);
 
   return (
     <>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">{editEntity ? "Edit Institute" : "Create New Institute"}</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              {editEntity ? "Edit Institute" : "Create New Institute"}
+            </h3>
             <p className="mt-1 max-w-2xl text-sm text-gray-500">
-              {editEntity ? "Modify the institute details below." : "Fill in the details to create a new institute in the system."}
+              {editEntity
+                ? "Modify the institute details below."
+                : "Fill in the details to create a new institute in the system."}
             </p>
           </div>
           <button
@@ -73,8 +126,8 @@ const InstituteForm = ({ onCancel, onSave, deptList, editEntity }) => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="mt-1 block w-full border border-gray-300 rounded p-2 focus:ring-indigo-500 focus:border-indigo-500"
-              required
             />
+            {errors.name && <div className="text-xs font-medium text-red-500 mt-1">{errors.name}</div>}
           </div>
 
           <div className="mb-4">
@@ -84,8 +137,8 @@ const InstituteForm = ({ onCancel, onSave, deptList, editEntity }) => {
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               className="mt-1 block w-full border border-gray-300 rounded p-2 focus:ring-indigo-500 focus:border-indigo-500"
-              required
             />
+            {errors.location && <div className="text-xs font-medium text-red-500 mt-1">{errors.location}</div>}
           </div>
 
           <div className="mb-4">
@@ -94,7 +147,6 @@ const InstituteForm = ({ onCancel, onSave, deptList, editEntity }) => {
               value={type}
               onChange={(e) => setType(e.target.value)}
               className="mt-1 block w-full border border-gray-300 rounded p-2 focus:ring-indigo-500 focus:border-indigo-500"
-              required
             >
               <option value="">Select Type</option>
               <option value="University">University</option>
@@ -102,31 +154,32 @@ const InstituteForm = ({ onCancel, onSave, deptList, editEntity }) => {
               <option value="Community College">Community College</option>
               <option value="Other">Other</option>
             </select>
+            {errors.type && <div className="text-xs font-medium text-red-500 mt-1">{errors.type}</div>}
           </div>
 
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-900">Select a department</label>
-            <div className="grid grid-cols-3 gap-4 mt-2">
-              {deptList.map((dept) => (
-                <div key={dept._id} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id={dept._id}
-                    value={dept._id}
-                    onChange={handleDepartmentChange}
-                    checked={departments.includes(dept._id)}
-                    className="mr-2"
-                  />
-                  <label htmlFor={dept._id} className="text-sm text-gray-900">{dept.name}</label>
-                </div>
-              ))}
-            </div>
+          <div className="flex flex-col space-y-2">
+            <label className="text-sm font-medium text-gray-900">Select Departments (Optional)</label>
+            <Select
+              isMulti
+              options={departments}
+              value={selectedDepartments}
+              onChange={setSelectedDepartments}
+              className="react-select-container"
+              classNamePrefix="react-select"
+              placeholder="Select departments..."
+            />
+            {errors.departments && (
+              <div className="text-xs font-medium text-red-500 mt-1">{errors.departments}</div>
+            )}
           </div>
 
-          {errorMessage && <div className="text-red-500 text-sm mb-4">{errorMessage}</div>}
+          {errors.general && <div className="text-red-500 text-sm mb-4">{errors.general}</div>}
 
           <div className="flex justify-between mt-6">
-            <button type="submit" className="bg-indigo-600 text-white py-2 px-6 rounded hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 w-full">
+            <button
+              type="submit"
+              className="bg-indigo-600 text-white py-2 px-6 rounded hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 w-full"
+            >
               Save
             </button>
           </div>

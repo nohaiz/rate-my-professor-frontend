@@ -1,3 +1,5 @@
+import { json } from "react-router-dom";
+
 const BASE_URL = import.meta.env.VITE_BACK_END_SERVER_URL;
 
 const indexCourses = async (page, limit) => {
@@ -62,7 +64,6 @@ const deleteCourse = async (id) => {
   }
 };
 
-// New createCourse function
 const createCourse = async (data) => {
   try {
     const url = new URL(`${BASE_URL}/admin/courses`);
@@ -73,24 +74,19 @@ const createCourse = async (data) => {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),  // Data to create the new course
+      body: JSON.stringify(data),
     });
 
     if (!res.ok) {
-      throw new Error(`Request failed with status ${res.status}`);
+      const errorResponse = await res.json();
+      return { status: res.status, error: errorResponse.error || `Error ${res.status}: ${res.statusText}` };
     }
 
     const json = await res.json();
-
-    if (json.error) {
-      throw new Error(json.error);
-    }
-
     return json;
 
   } catch (error) {
     console.error("Error creating course:", error);
-    return { success: false, message: error.message };
   }
 };
 
@@ -104,24 +100,19 @@ const updateCourse = async (id, data) => {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),  // Data to update the existing course
+      body: JSON.stringify(data),
     });
 
     if (!res.ok) {
-      throw new Error(`Request failed with status ${res.status}`);
-    }
+      const errorResponse = await res.json();
+      return { status: res.status, error: errorResponse.error || `Error ${res.status}: ${res.statusText}` };
 
+    }
     const json = await res.json();
-
-    if (json.error) {
-      throw new Error(json.error);
-    }
-
     return json;
 
   } catch (error) {
     console.error("Error updating course:", error);
-    return { success: false, message: error.message };
   }
 };
 

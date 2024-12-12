@@ -91,7 +91,6 @@ const deleteInstitute = async (id) => {
   }
 };
 
-// New createInstitute function
 const createInstitute = async (data) => {
   try {
     const url = new URL(`${BASE_URL}/admin/institutes`);
@@ -102,28 +101,22 @@ const createInstitute = async (data) => {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),  // Data to create the new institute
+      body: JSON.stringify(data),
     });
 
     if (!res.ok) {
-      throw new Error(`Request failed with status ${res.status}`);
+      const errorResponse = await res.json();
+      return { status: res.status, error: errorResponse.error || `Error ${res.status}: ${res.statusText}` };
     }
 
     const json = await res.json();
-
-    if (json.error) {
-      throw new Error(json.error);
-    }
-
     return json;
 
   } catch (error) {
     console.error("Error creating institute:", error);
-    return { success: false, message: error.message };
   }
 };
 
-// New updateInstitute function
 const updateInstitute = async (id, data) => {
   try {
     const url = new URL(`${BASE_URL}/admin/institutes/${id}`);
@@ -134,24 +127,19 @@ const updateInstitute = async (id, data) => {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),  // Data to update the existing institute
+      body: JSON.stringify(data),
     });
 
     if (!res.ok) {
-      throw new Error(`Request failed with status ${res.status}`);
+      const errorResponse = await res.json();
+      return { status: res.status, error: errorResponse.error || `Error ${res.status}: ${res.statusText}` };
     }
 
     const json = await res.json();
-
-    if (json.error) {
-      throw new Error(json.error);
-    }
-
     return json;
 
   } catch (error) {
     console.error("Error updating institute:", error);
-    return { success: false, message: error.message };
   }
 };
 

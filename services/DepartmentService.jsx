@@ -62,7 +62,6 @@ const deleteDepartment = async (id) => {
   }
 };
 
-// New createDepartment function
 const createDepartment = async (data) => {
   try {
     const url = new URL(`${BASE_URL}/admin/departments`);
@@ -73,28 +72,22 @@ const createDepartment = async (data) => {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),  // Data to create the new department
+      body: JSON.stringify(data),
     });
 
     if (!res.ok) {
-      throw new Error(`Request failed with status ${res.status}`);
+      const errorResponse = await res.json();
+      return { status: res.status, error: errorResponse.error || `Error ${res.status}: ${res.statusText}` };
     }
 
     const json = await res.json();
-
-    if (json.error) {
-      throw new Error(json.error);
-    }
-
     return json;
 
   } catch (error) {
     console.error("Error creating department:", error);
-    return { success: false, message: error.message };
   }
 };
 
-// New updateDepartment function
 const updateDepartment = async (id, data) => {
   try {
     const url = new URL(`${BASE_URL}/admin/departments/${id}`);
@@ -105,24 +98,19 @@ const updateDepartment = async (id, data) => {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),  // Data to update the existing department
+      body: JSON.stringify(data),
     });
 
     if (!res.ok) {
-      throw new Error(`Request failed with status ${res.status}`);
+      const errorResponse = await res.json();
+      return { status: res.status, error: errorResponse.error || `Error ${res.status}: ${res.statusText}` };
     }
 
     const json = await res.json();
-
-    if (json.error) {
-      throw new Error(json.error);
-    }
-
     return json;
 
   } catch (error) {
     console.error("Error updating department:", error);
-    return { success: false, message: error.message };
   }
 };
 

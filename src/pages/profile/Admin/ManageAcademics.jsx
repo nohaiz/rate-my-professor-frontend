@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+// Original 
+
+import { useState, useEffect, useRef } from "react";
 import { AiOutlineEdit, AiOutlineDelete } from "react-icons/ai";
-import { useRef } from 'react';
 
 import InstituteServices from "../../../../services/InstituteServices";
 import DepartmentService from "../../../../services/DepartmentService";
@@ -17,11 +18,44 @@ const ManageAcademics = () => {
   const [entityType, setEntityType] = useState("Course");
   const [entityMaxItems, setEntityMaxItems] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
-  const [showForm, setShowForm] = useState(false)
+  const [showForm, setShowForm] = useState(false);
   const [deptList, setDeptList] = useState([]);
   const [courseList, setCourseList] = useState([]);
   const [editEntity, setEditEntity] = useState(null);
   const hasScrolled = useRef(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [paginationVisible, setPaginationVisible] = useState(true)
+
+  const [searchData, setSearchData] = useState([]);
+
+  useEffect(() => {
+    const fetchEntities = async () => {
+      try {
+        let response;
+        if (entityType === "Institute") {
+          response = await InstituteServices.indexInstitutes(currentPage, itemsPerPage);
+          setEntities(response.institutions || []);
+          setTotalPages(response.totalInstitution || 0)
+        } else if (entityType === "Department") {
+          response = await DepartmentService.indexDepartments(currentPage, itemsPerPage);
+          setEntities(response.departments || []);
+          setTotalPages(response.totalDepartments || 0)
+        } else if (entityType === "Course") {
+          response = await CourseServices.indexCourses(currentPage, itemsPerPage);
+          setEntities(response.courses || []);
+          setTotalPages(response.totalCourses || 0)
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchEntities();
+  }, [entityType, currentPage]);
+
 
   useEffect(() => {
     const fetchEntities = async () => {
@@ -29,16 +63,16 @@ const ManageAcademics = () => {
         let response;
         if (entityType === "Institute") {
           response = await InstituteServices.indexInstitutes();
-          setEntities(response.institutions || []);
+          setSearchData(response.institutions || []);
         } else if (entityType === "Department") {
           response = await DepartmentService.indexDepartments();
-          setEntities(response.departments || []);
+          setSearchData(response.departments || []);
         } else if (entityType === "Course") {
           response = await CourseServices.indexCourses();
-          setEntities(response.courses || []);
+          setSearchData(response.courses || []);
         }
       } catch (error) {
-        console.error(error)
+        console.error(error);
       }
     };
 
@@ -51,16 +85,16 @@ const ManageAcademics = () => {
         const response = await DepartmentService.indexDepartments();
         setDeptList(response.departments || []);
       } catch (error) {
-        console.error(error)
+        console.error(error);
       }
     };
 
     const fetchCourses = async () => {
       try {
-        const response = await CourseServices.indexCourses()
+        const response = await CourseServices.indexCourses();
         setCourseList(response.courses || []);
       } catch (error) {
-        console.error(error)
+        console.error(error);
       }
     };
     fetchCourses();
@@ -98,12 +132,21 @@ const ManageAcademics = () => {
       console.error(error);
     }
   };
+
   const handleCreateClick = () => {
     setShowForm(true);
   };
+
   const handleCancelForm = () => {
+    setEditEntity(null)
     setShowForm(false);
   };
+
+  const handleEditEntity = (entity) => {
+    setEditEntity(entity);
+    setShowForm(true);
+  };
+
   const disableCreateBtn = () => {
     if (entityType === "Institute" && deptList.length === 0) {
       return true;
@@ -112,6 +155,7 @@ const ManageAcademics = () => {
     }
     return false;
   };
+
   const createButtonClass = () => {
     if (disableCreateBtn()) {
       return "bg-gray-400 text-gray-500 cursor-not-allowed";
@@ -126,24 +170,21 @@ const ManageAcademics = () => {
           entity._id === newEntity._id ? newEntity : entity
         )
       );
-      setEditEntity(null)
+      setEditEntity(null);
     } else {
       setEntities((prevEntities) => [newEntity, ...prevEntities]);
     }
     setShowForm(false);
   };
 
-  const handleEditEntity = (entity) => {
-    setEditEntity(entity)
-    setShowForm(true);
-  }
-
   useEffect(() => {
     if (searchQuery.trim() === "") {
+      setPaginationVisible(true)
       setFilteredEntities(entities);
     } else {
+      setPaginationVisible(false)
       const lowercasedQuery = searchQuery.toLowerCase();
-      const filtered = entities.filter((entity) => {
+      const filtered = searchData.filter((entity) => {
         if (entityType === "Institute") {
           return entity.name.toLowerCase().includes(lowercasedQuery);
         } else if (entityType === "Department") {
@@ -165,26 +206,28 @@ const ManageAcademics = () => {
   };
 
   const changeEntityView = (type) => {
+    setCurrentPage(1)
     setEntityType(type);
     setSearchQuery("");
     setEntityMaxItems({});
   };
 
-  const handleShowMoreLess = (entityId, entityType) => {
-    setEntityMaxItems((prevMaxItems) => {
-      const currentMax = prevMaxItems[entityId] || 3;
-      const entity = entities.find((e) => e._id === entityId);
-      const newMax = currentMax === 3 ? (entityType === "Department" ? entity.departments.length : entity.courses.length) : 3;
+  const handlePagination = (page) => {
+    if (page < 1 || page > Math.ceil(totalPages / 10)) return;
+    setCurrentPage(page);
+  };
 
-      return {
-        ...prevMaxItems,
-        [entityId]: newMax,
-      };
+  const handleShowMoreLess = (entityId, type) => {
+    setEntityMaxItems(prevState => {
+      const updatedMaxItems = { ...prevState };
+      const currentMaxItems = updatedMaxItems[entityId] || 3;
+      updatedMaxItems[entityId] = currentMaxItems === 3 ? 10 : 3;
+      return updatedMaxItems;
     });
   };
 
   const renderDetailsColumn = (entity) => {
-    const maxItems = entityMaxItems[entity?._id] || 3;
+    const maxItems = entityMaxItems[entity._id] || 3;
 
     if (entityType === "Institute") {
       if (entity.departments && entity.departments.length > 0) {
@@ -226,135 +269,174 @@ const ManageAcademics = () => {
       } else {
         return <span>Empty</span>;
       }
-    } else if (entityType === "Course") {
-      return (
-        <div>
-          <span>Code: {entity.code}</span><br />
-          <span>Credits: {entity.credits}</span>
-        </div>
-      );
     }
-    return <span>-</span>;
+    return <span>Empty</span>;
   };
 
   return (
     <>
-      {showForm ?
+      {showForm ? (
         <>
           {entityType === "Institute" && <InstituteForm onCancel={handleCancelForm} onSave={handleSaveEntity} deptList={deptList} editEntity={editEntity} />}
           {entityType === "Department" && <DepartmentForm onCancel={handleCancelForm} onSave={handleSaveEntity} courseList={courseList} editEntity={editEntity} />}
           {entityType === "Course" && <CourseForm onCancel={handleCancelForm} onSave={handleSaveEntity} editEntity={editEntity} />}
-        </> :
-        (
-          <div className="space-y-5">
-            <div className="flex justify-between items-center mb-6 ml-6">
-              <div className="flex flex-col space-y-2">
-                <h3 className="flex items-center text-lg font-semibold text-gray-900">
-                  Manage Academics
-                  {successMessage && (
-                    <div className=" text-green-400 text-sm font-medium ml-4 flex justify-center items-center">
-                      {successMessage}
-                    </div>
+        </>
+      ) : (
+        <div className="space-y-5">
+          <div className="flex justify-between items-center mb-6 ml-6">
+            <div className="flex flex-col space-y-2">
+              <h3 className="flex items-center text-lg font-semibold text-gray-900">
+                Manage Academics
+                {successMessage && (
+                  <div className=" text-green-400 text-sm font-medium ml-4 flex justify-center items-center">
+                    {successMessage}
+                  </div>
+                )}
+              </h3>
+              <p className="text-sm text-gray-600 mt-1">
+                Manage and view Institutes, Departments, and Courses.
+              </p>
+            </div>
+            <button
+              onClick={handleCreateClick}
+              disabled={disableCreateBtn()}
+              className={`${createButtonClass()} text-sm font-medium rounded-full py-2 px-6`}
+            >
+              Create {entityType}
+            </button>
+          </div>
+
+          <div className="mb-6 ml-4">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              placeholder={`Search ${entityType}s...`}
+              className="sm:text-sm/6 px-4 py-2 border rounded-full w-80"
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-2 ml-4">
+            <button
+              onClick={() => changeEntityView("Course")}
+              className="bg-indigo-500 text-white text-sm font-medium rounded-full py-2 px-6 mr-4 hover:bg-indigo-600 focus:ring-2 focus:ring-indigo-900"
+            >
+              Courses
+            </button>
+            <button
+              onClick={() => changeEntityView("Department")}
+              className="bg-indigo-500 text-white text-sm font-medium rounded-full py-2 px-6 mr-4 hover:bg-indigo-600 focus:ring-2 focus:ring-indigo-900"
+            >
+              Departments
+            </button>
+            <button
+              onClick={() => changeEntityView("Institute")}
+              className="bg-indigo-500 text-white text-sm font-medium rounded-full py-2 px-6  hover:bg-indigo-600 focus:ring-2 focus:ring-indigo-900"
+            >
+              Institutes
+            </button>
+          </div>
+          <div className="overflow-x-auto mt-5">
+            <table className="w-full table-auto text-sm">
+              <thead className="bg-white text-sm text-gray-700 font-thin">
+                <tr>
+                  <th className="px-6 py-4 text-left border-b border-gray-900 font-medium">
+                    {entityType === "Institute" ? "Institute Name" : entityType === "Department" ? "Department Name" : "Course Title"}
+                  </th>
+                  {entityType === "Institute" && (
+                    <>
+                      <th className="px-6 py-4 text-left border-b border-gray-900 font-medium">Location</th>
+                      <th className="px-6 py-4 text-left border-b border-gray-900 font-medium">Institute Type</th>
+                    </>
                   )}
-                </h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  Manage and view Institutes, Departments, and Courses.
-                </p>
-              </div>
-              <button
-                onClick={handleCreateClick}
-                disabled={disableCreateBtn()}
-                className={`${createButtonClass()} text-sm font-medium rounded-full py-2 px-6`}
-              >
-                Create {entityType}
-              </button>
-            </div>
+                  {entityType === "Course" ?
+                    (<>
+                      <th className="px-6 py-4 text-left border-b border-gray-900 font-medium">Code</th>
+                      <th className="px-6 py-4 text-left border-b border-gray-900 font-medium">Credits</th>
+                    </>
+                    )
+                    :
+                    (
+                      <th className="px-6 py-4 text-left border-b border-gray-900 font-medium">
+                        {entityType === "Institute" ? "Departments" : entityType === "Department" ? "Courses" : "Details"}
+                      </th>
+                    )
+                  }
 
-            <div className="mb-6 ml-4">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={handleSearchChange}
-                placeholder={`Search ${entityType}s...`}
-                className="sm:text-sm/6 px-4 py-2 border rounded-full w-80"
-              />
-            </div>
+                  <th className="px-6 py-4 text-left border-b border-gray-900 font-medium">Actions</th>
+                </tr>
+              </thead>
 
-            <div className="flex flex-wrap gap-2 ml-4">
-              <button
-                onClick={() => changeEntityView("Course")}
-                className="bg-indigo-500 text-white text-sm font-medium rounded-full py-2 px-6 mr-4 hover:bg-indigo-600 focus:ring-2 focus:ring-indigo-900"
-              >
-                Courses
-              </button>
-              <button
-                onClick={() => changeEntityView("Department")}
-                className="bg-indigo-500 text-white text-sm font-medium rounded-full py-2 px-6 mr-4 hover:bg-indigo-600 focus:ring-2 focus:ring-indigo-900"
-              >
-                Departments
-              </button>
-              <button
-                onClick={() => changeEntityView("Institute")}
-                className="bg-indigo-500 text-white text-sm font-medium rounded-full py-2 px-6  hover:bg-indigo-600 focus:ring-2 focus:ring-indigo-900"
-              >
-                Institutes
-              </button>
-            </div>
-            <div className="overflow-x-auto mt-5">
-              <table className="w-full table-auto text-sm">
-                <thead className="bg-white text-sm text-gray-700 font-thin">
-                  <tr>
-                    <th className="px-6 py-4 text-left border-b border-gray-900 font-medium">
-                      {entityType === "Institute" ? "Institute Name" : entityType === "Department" ? "Department Name" : "Course Title"}
-                    </th>
+              <tbody className="text-gray-700">
+                {filteredEntities.map((entity) => (
+                  <tr key={entity._id} className="border-b">
+                    <td className="px-6 py-4 text-gray-900 font-semibold">
+                      {entity?.title || entity?.name}
+                    </td>
                     {entityType === "Institute" && (
                       <>
-                        <th className="px-6 py-4 text-left border-b border-gray-900 font-medium">Location</th>
-                        <th className="px-6 py-4 text-left border-b border-gray-900 font-medium">Institute Type</th>
+                        <td className="px-6 py-4 text-gray-500 font-semibold">{entity.location}</td>
+                        <td className="px-6 py-4 text-gray-500 font-semibold">{entity.type}</td>
                       </>
                     )}
-                    <th className="px-6 py-4 text-left border-b border-gray-900 font-medium">
-                      {entityType === "Institute" ? "Departments" : entityType === "Department" ? "Courses" : "Details"}
-                    </th>
-                    <th className="px-6 py-4 text-left border-b border-gray-900 font-medium">Actions</th>
-                  </tr>
-                </thead>
-
-                <tbody className="text-gray-700">
-                  {filteredEntities.map((entity) => (
-                    <tr key={entity._id} className="border-b">
-                      <td className="px-6 py-4 text-gray-900 font-semibold">
-                        {entity?.title || entity?.name}
-                      </td>
-                      {entityType === "Institute" && (
-                        <>
-                          <td className="px-6 py-4 text-gray-500 font-semibold">{entity.location}</td>
-                          <td className="px-6 py-4 text-gray-500 font-semibold">{entity.type}</td>
-                        </>
-                      )}
+                    {entityType === "Course" ? (
+                      <>
+                        <td className="px-6 py-4 text-gray-500 font-semibold">{entity.code}</td>
+                        <td className="px-6 py-4 text-gray-500 font-semibold">{entity.credits}</td>
+                      </>
+                    )
+                      :
                       <td className="px-6 py-4 text-gray-500 font-semibold">{renderDetailsColumn(entity)}</td>
-                      <td className="px-6 py-4">
-                        <button
-                          className="text-black hover:text-gray-800 text-sm"
-                          onClick={() => handleEditEntity(entity)}
-                        >
-                          <AiOutlineEdit className="mr-2" />
-                        </button>
-                        <button
-                          className="text-red-600 hover:text-red-900 text-sm ml-4"
-                          onClick={() => handleDeleteEntity(entity._id)}
-                        >
-                          <AiOutlineDelete className="mr-2" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-
-              </table>
-            </div>
+                    }
+                    <td className="px-6 py-4">
+                      <button
+                        className="text-black hover:text-gray-800 text-sm"
+                        onClick={() => handleEditEntity(entity)}
+                      >
+                        <AiOutlineEdit className="mr-2" />
+                      </button>
+                      <button
+                        className="text-red-600 hover:text-red-900 text-sm ml-4"
+                        onClick={() => handleDeleteEntity(entity._id)}
+                      >
+                        <AiOutlineDelete className="mr-2" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
+          {paginationVisible ?
+            Math.ceil(totalPages / 10) > 1 ?
+              <div className="flex justify-between items-center mt-4 px-6">
+                <button
+                  onClick={() => handlePagination(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="bg-indigo-500 text-white text-sm font-medium rounded-full py-2 px-6 mr-4 hover:bg-indigo-600 disabled:bg-gray-400 text-gray-500"
+                >
+                  Prev
+                </button>
+
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600">Page {currentPage} of {Math.ceil(totalPages / 10)}
+                  </span>
+                </div>
+                <button
+                  onClick={() => handlePagination(currentPage + 1)}
+                  disabled={currentPage === Math.ceil(totalPages / 10)}
+                  className="bg-indigo-500 text-white text-sm font-medium rounded-full py-2 px-6 mr-4 hover:bg-indigo-600 disabled:bg-gray-400 text-gray-500"
+                >
+                  Next
+                </button>
+              </div>
+              :
+              <></>
+            :
+            <></>
+          }
+        </div>
+      )}
     </>
   );
 };
