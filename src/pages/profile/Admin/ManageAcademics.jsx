@@ -409,7 +409,7 @@ const ManageAcademics = () => {
           </div>
           {paginationVisible ?
             Math.ceil(totalPages / 10) > 1 ?
-              <div className="flex justify-between items-center mt-4 px-6">
+              <div className="flex justify-between items-center mt-4 px-4">
                 <button
                   onClick={() => handlePagination(currentPage - 1)}
                   disabled={currentPage === 1}

@@ -8,7 +8,7 @@ import AdminProfileForm from "./AdminProfileForm";
 import ManageUsers from "./ManageUsers";
 import ManageAcademics from "./ManageAcademics";
 
-const AdminProfile = ({ handleSignout }) => {
+const AdminProfile = ({ handleSignout, user }) => {
   const { id } = useParams();
   const [adminProfile, setAdminProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -138,12 +138,12 @@ const AdminProfile = ({ handleSignout }) => {
 
           {activeTab === 'dashboard' && (
             <>
-              <ManageUsers />
+              <ManageUsers user={user} />
             </>
           )}
           {activeTab === 'academic' && (
             <section className="space-y-6">
-              <ManageAcademics  />
+              <ManageAcademics />
             </section>
           )}
           {activeTab === 'reporting' && (

@@ -1,85 +1,52 @@
-import { useEffect, useState } from "react";
-import { AiOutlineEdit, AiOutlineDelete, AiOutlineProfile } from "react-icons/ai";
+import { useEffect, useState, useRef } from "react";
+import { AiOutlineEdit, AiOutlineDelete, AiOutlineProfile, AiOutlineStar } from "react-icons/ai";
 import AdminUserForm from "./AdminUserForm";
 import ManageUsersServices from "../../../../services/ManageUsersServices";
 
-const ManageUsers = () => {
-
+const ManageUsers = ({ user }) => {
   const [users, setUsers] = useState([]);
   const [isUserFormVisible, setUserFormVisible] = useState(false);
   const [editUserId, setEditUserId] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [filterUserRole, setFilterUserRole] = useState([]);
-  const [searchQuery, setSearchQuery] = useState(''); // Search query state
-  const [filteredUsers, setFilteredUsers] = useState([]); // Filtered users state
+  const [filterUserRole, setFilterUserRole] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const hasScrolled = useRef(false);
 
-  // Filter users by role
+
   const filterAdmins = () => {
-    const filteredAdmins = users.filter(user => user.adminAccount);
-    setFilterUserRole(filteredAdmins);
+    setFilterUserRole('admin');
+    setCurrentPage(1);
   };
 
   const filterStudents = () => {
-    const filteredStudents = users.filter(user => user.studentAccount);
-    setFilterUserRole(filteredStudents);
+    setFilterUserRole('student');
+    setCurrentPage(1);
   };
 
   const filterProfessors = () => {
-    const filteredProfessors = users.filter(user => user.professorAccount);
-    setFilterUserRole(filteredProfessors);
+    setFilterUserRole('professor');
+    setCurrentPage(1);
   };
 
   const clearFilter = () => {
-    setFilterUserRole([]);
+    setFilterUserRole('');
+    setSearchQuery('');
+    setCurrentPage(1);
   };
 
-  // Fetch users from API
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await ManageUsersServices.indexUsers();
-        setUsers(response.users);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    fetchUsers();
-  }, [isUserFormVisible]);
-
-  // Apply both search and role filters here
-  useEffect(() => {
-    let filteredList = filterUserRole.length > 0 ? filterUserRole : users;
-
-    // Filter by email search query
-    if (searchQuery) {
-      filteredList = filteredList.filter(user =>
-        user.email.toLowerCase().includes(searchQuery.toLowerCase()) // Only filter by email
-      );
-    }
-
-    setFilteredUsers(filteredList);
-  }, [searchQuery, users, filterUserRole]); // Re-run filtering on search query, users, or role filters
-
-  // Scroll to top when users change
-  useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
-  }, [users]);
-
-  // Show user form for creating new user
   const renderCreateUserForm = () => {
+    setEditUserId("");
     setUserFormVisible(true);
   };
 
-  // Show user form for editing an existing user
   const renderEditUserForm = (userId) => {
     setEditUserId(userId);
     setUserFormVisible(true);
   };
 
-  // Handle deleting a user
   const handleDeleteUser = async (userId) => {
     try {
       await ManageUsersServices.deleteUser(userId);
@@ -89,15 +56,99 @@ const ManageUsers = () => {
     } catch (error) {
       console.error("Error deleting user:", error);
     }
+  }
+  useEffect(() => {
+    if (successMessage && !hasScrolled.current) {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+      hasScrolled.current = true;
+    }
+  }, [successMessage]);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await ManageUsersServices.indexUsers();
+        const filteredOwnUser = response ? response.users.filter((ownUser) => ownUser._id !== user.Id) : [];
+        setUsers(filteredOwnUser);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchUsers();
+  }, [isUserFormVisible]);
+
+  useEffect(() => {
+    let filteredList = [...users];
+
+    if (filterUserRole) {
+      filteredList = filteredList.filter((user) => {
+        if (filterUserRole === 'admin') return user.adminAccount;
+        if (filterUserRole === 'professor') return user.professorAccount;
+        if (filterUserRole === 'student') return user.studentAccount;
+        return false;
+      });
+    }
+
+    if (searchQuery) {
+      filteredList = filteredList.filter((user) =>
+        user.email.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    if (searchQuery || filterUserRole) {
+      setCurrentPage(1);
+    }
+
+    setFilteredUsers(filteredList);
+  }, [searchQuery, users, filterUserRole]);
+
+  const handlePagination = (page) => {
+    if (page < 1 || page > Math.ceil(filteredUsers.length / itemsPerPage)) return;
+    setCurrentPage(page);
   };
 
-  // Users to be displayed after applying role filter and search filter
-  const displayedUsers = filteredUsers;
+  const currentUsers = filteredUsers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const renderPagination = () => {
+    const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+    if (totalPages <= 1) return null;
+
+    return (
+      <div className="flex justify-between items-center px-4">
+        <button
+          onClick={() => handlePagination(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="bg-indigo-500 text-white text-sm font-medium rounded-full py-2 px-6 mr-4 hover:bg-indigo-600 disabled:bg-gray-400 text-gray-500 mt-4"
+        >
+          Prev
+        </button>
+
+        <div className="flex items-center space-x-2">
+          <span className="text-sm text-gray-600">
+            Page {currentPage} of {Math.ceil(filteredUsers.length / itemsPerPage)}
+          </span>
+        </div>
+
+        <button
+          onClick={() => handlePagination(currentPage + 1)}
+          disabled={currentPage === Math.ceil(filteredUsers.length / itemsPerPage)}
+          className="bg-indigo-500 text-white text-sm font-medium rounded-full py-2 px-6 mr-4 hover:bg-indigo-600 disabled:bg-gray-400 text-gray-500 mt-4"
+        >
+          Next
+        </button>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-2">
       {isUserFormVisible ? (
-        <AdminUserForm setUserFormVisible={setUserFormVisible} editUserId={editUserId} setSuccessMessage={setSuccessMessage} setEditUserId={setEditUserId} />
+        <AdminUserForm setUserFormVisible={setUserFormVisible} editUserId={editUserId} setSuccessMessage={setSuccessMessage} />
       ) : (
         <>
           <div className="flex justify-between items-center mb-6 ml-6">
@@ -115,14 +166,13 @@ const ManageUsers = () => {
               </p>
             </div>
             <button
-              onClick={renderCreateUserForm}
+              onClick={() => renderCreateUserForm()}
               className="bg-indigo-500 text-white text-sm font-medium rounded-full py-2 px-6 hover:bg-indigo-600"
             >
               Create User
             </button>
           </div>
 
-          {/* Search Box */}
           <div className="mb-6 ml-4">
             <input
               type="text"
@@ -163,7 +213,7 @@ const ManageUsers = () => {
             </button>
           </div>
 
-          <div className="max-w-full ">
+          <div className="max-w-full">
             <div className="overflow-x-auto mt-5">
               <table className="w-full table-auto text-sm">
                 <thead className="bg-white text-sm text-gray-700 font-thin">
@@ -173,11 +223,11 @@ const ManageUsers = () => {
                     <th className="px-6 py-4 text-left border-b border-gray-900 font-medium">Last Name</th>
                     <th className="px-6 py-4 text-left border-b border-gray-900 font-medium">Role</th>
                     <th className="px-6 py-4 text-left border-b border-gray-900 font-medium">Institution</th>
-                    <th className="px-6 py-4 text-left border-b border-gray-900 font-medium"></th>
+                    <th className="px-6 py-4 text-left border-b border-gray-900 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="text-gray-700">
-                  {displayedUsers.map((user) => {
+                  {currentUsers.map((user) => {
                     const admin = user.adminAccount;
                     const professor = user.professorAccount;
                     const student = user.studentAccount;
@@ -207,11 +257,10 @@ const ManageUsers = () => {
                           : "Empty";
 
                     const institution = professor
-                      ? professor.institution?.name || "Empty"  
+                      ? professor.institution?.name || "Empty"
                       : student
-                        ? student.institution?.name || "Empty"  
-                        : "Empty";  
-
+                        ? student.institution?.name || "Empty"
+                        : "Empty";
 
                     return (
                       <tr key={user._id} className="border-b">
@@ -220,25 +269,29 @@ const ManageUsers = () => {
                         <td className="px-6 py-4 text-gray-500 font-semibold">{lastName}</td>
                         <td className="px-6 py-4 text-gray-500 font-semibold">{role}</td>
                         <td className="px-6 py-4 text-gray-500 font-semibold">{institution}</td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 flex items-center space-x-4">
                           <button
-                            className="text-black hover:text-gray-800 text-sm"
-                            onClick={() => renderEditUserForm(user._id)}
-                          >
-                            <AiOutlineProfile className="mr-2" />
-                          </button>
-                          <button
-                            className="text-black hover:text-gray-800 text-sm ml-4"
-                            onClick={() => renderEditUserForm(user._id)}
-                          >
-                            <AiOutlineEdit className="mr-2" />
-                          </button>
-                          <button
-                            className="text-red-600 hover:text-red-900 text-sm ml-4"
+                            className="text-red-600 hover:text-red-900 text-sm"
                             onClick={() => handleDeleteUser(user._id)}
                           >
                             <AiOutlineDelete className="mr-2" />
                           </button>
+                          <button
+                            className="text-black hover:text-gray-800 text-sm"
+                            onClick={() => renderEditUserForm(user._id)}
+                          >
+                            <AiOutlineEdit className="mr-1" />
+                          </button>
+                          {!user.adminAccount && (
+                            <button
+                              className="text-black hover:text-gray-800 text-sm"
+                              onClick={() => setEditUserId(user._id)}
+                            >
+                              <div className="flex items-center justify-center">
+                                View Ratings <AiOutlineStar className="ml-2" />
+                              </div>
+                            </button>
+                          )}
                         </td>
                       </tr>
                     );
@@ -247,9 +300,11 @@ const ManageUsers = () => {
               </table>
             </div>
           </div>
+          {renderPagination()}
         </>
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 };
 

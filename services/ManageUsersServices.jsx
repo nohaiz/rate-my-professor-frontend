@@ -47,20 +47,15 @@ const createUser = async (formData) => {
     });
 
     if (!res.ok) {
-      throw new Error(`Request failed with status ${res.status}`);
+      const errorResponse = await res.json();
+      return { status: res.status, error: errorResponse.error || `Error ${res.status}: ${res.statusText}` };
     }
 
     const json = await res.json();
-
-    if (json.error) {
-      throw new Error(json.error);
-    }
-
     return json;
 
   } catch (error) {
     console.error("Error creating user:", error);
-    return { error: error.message };
   }
 };
 
@@ -107,17 +102,14 @@ const editUser = async (userId, formData) => {
     });
 
     if (!res.ok) {
-      throw new Error(`Request failed with status ${res.status}`);
+      const errorResponse = await res.json();
+      return { status: res.status, error: errorResponse.error || `Error ${res.status}: ${res.statusText}` };
+
     }
     const json = await res.json();
-
-    if (json.error) {
-      throw new Error(json.error);
-    }
     return json;
   } catch (error) {
     console.error("Error editing user:", error);
-    return { error: error.message };
   }
 };
 

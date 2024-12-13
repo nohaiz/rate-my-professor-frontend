@@ -139,7 +139,7 @@ const CourseForm = ({ onCancel, onSave, editEntity }) => {
             onClick={onCancel}
             className="text-sm text-gray-900 hover:text-red-600 focus:outline-none absolute right-0"
           >
-            <AiOutlineClose className="mr-2" />
+            <AiOutlineClose className="mr-6" />
           </button>
         </div>
       </div>
