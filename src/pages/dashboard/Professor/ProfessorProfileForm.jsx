@@ -166,7 +166,7 @@ const ProfessorProfileForm = ({ professorProfile, setProfessorProfile, setIsEdit
       <div>
 
         <div className="flex flex-col space-y-2">
-          <label className="text-sm font-medium text-gray-900">Department</label>
+          <label className="text-sm font-medium text-gray-900">Department (Optional)</label>
           <select
             name="selectedDepartment"
             value={formData.selectedDepartment}
@@ -180,10 +180,6 @@ const ProfessorProfileForm = ({ professorProfile, setProfessorProfile, setIsEdit
               </option>
             ))}
           </select>
-        </div>
-
-        <div className="text-xs text-gray-600 mt-3 ">
-          <p>Select a department and course to assign to the professor, or leave blank if not needed.</p>
         </div>
 
         {formData.selectedDepartment && (

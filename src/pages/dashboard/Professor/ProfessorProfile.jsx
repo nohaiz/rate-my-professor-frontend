@@ -2,17 +2,17 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AiOutlineEdit, AiOutlineDelete, AiOutlineClose } from "react-icons/ai";
 
-import ProfessorServices from "../../../../services/ProfessorServices";
 import ProfileService from "../../../../services/ProfileService";
 import ProfessorProfileForm from "./ProfessorProfileForm";
+import ProfessorServices from "../../../../services/ProfessorServices";
 
-const ProfessorProfile = ({handleSignout}) => {
+import SaveProfessors from "../../../components/SavedProfessors";
+
+const ProfessorProfile = ({ handleSignout }) => {
   const { id } = useParams();
   const [professorProfile, setProfessorProfile] = useState(null);
-  const [isProfileVisible, setProfileVisible] = useState(true);
-  const [isProfileButtonDisabled, setProfileButtonDisabled] = useState(false);
-  const [isRatingsButtonDisabled, setRatingsButtonDisabled] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState("profile");
   const [courses, setCourses] = useState([]);
   const navigate = useNavigate();
 
@@ -36,18 +36,6 @@ const ProfessorProfile = ({handleSignout}) => {
   useEffect(() => {
     fetchProfessorProfile();
   }, [id]);
-
-  const showProfile = () => {
-    setProfileVisible(true);
-    setProfileButtonDisabled(true);
-    setRatingsButtonDisabled(false);
-  };
-
-  const showRatings = () => {
-    setProfileVisible(false);
-    setProfileButtonDisabled(false);
-    setRatingsButtonDisabled(true);
-  };
 
   const { professorAccount } = professorProfile || {};
   const { firstName, lastName, institution, bio } = professorAccount || {};
@@ -80,47 +68,47 @@ const ProfessorProfile = ({handleSignout}) => {
   };
 
   const handleDelete = async () => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this profile?")
+    const confirmDelete = window.confirm("Are you sure you want to delete this profile?");
     if (confirmDelete) {
       try {
-        await ProfileService.deleteProfile(id)
-        alert("Profile deleted successfully.")
-        handleSignout()
-        navigate("/auth/sign-in")
+        await ProfileService.deleteProfile(id);
+        alert("Profile deleted successfully.");
+        handleSignout();
+        navigate("/auth/sign-in");
       } catch (error) {
-        console.error("Error deleting profile:", error)
-        alert("There was an error deleting the profile.")
+        console.error("Error deleting profile:", error);
+        alert("There was an error deleting the profile.");
       }
     }
-  }
+  };
 
   return (
     <div className="p-6">
       <div className="mb-6 flex space-x-6 border-b border-gray-300 pb-2">
-        <button
-          onClick={showProfile}
-          disabled={isProfileButtonDisabled}
-          className={`${isProfileButtonDisabled ? "text-gray-500" : "text-gray-500"} py-2 px-4 text-sm font-medium transition duration-200 ease-in-out hover:text-gray-900 focus:outline-none ${isProfileVisible ? "border-b-2 border-indigo-500" : ""}`}
-        >
-          Professor Profile
-        </button>
-        <button
-          onClick={showRatings}
-          disabled={isRatingsButtonDisabled}
-          className={`${isRatingsButtonDisabled ? "text-gray-500" : "text-gray-500"} py-2 px-4 text-sm font-medium transition duration-200 ease-in-out hover:text-gray-900 focus:outline-none ${!isProfileVisible ? "border-b-2 border-indigo-500" : ""}`}
-        >
-          Ratings
-        </button>
+        {["profile", "savedProfessors", "ratings"].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`${activeTab === tab
+              ? "bg-indigo-500 text-white"
+              : "bg-transparent text-gray-600"
+              } rounded-full py-2 px-6 text-sm font-medium transition duration-200 ease-in-out hover:bg-indigo-100 hover:text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500`}
+          >
+            {tab === "profile" && "Professor Profile"}
+            {tab === "savedProfessors" && "Saved Professors"}
+            {tab === "ratings" && "Ratings"}
+          </button>
+        ))}
       </div>
 
-      {professorAccount && (
+      {professorProfile && (
         <>
-          {isProfileVisible ? (
+          {activeTab === "profile" && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Personal Information</h3>
-                  <p className="mt-1 max-w-2xl text-sm text-gray-500">Personal details and application.</p>
+                  <h3 className="text-lg font-semibold text-gray-900">Professor Information</h3>
+                  <p className="mt-1 max-w-2xl text-sm text-gray-500">Personal details below.</p>
                 </div>
                 <div className="flex space-x-4">
                   {!isEditing ? (
@@ -231,7 +219,15 @@ const ProfessorProfile = ({handleSignout}) => {
                 </>
               )}
             </div>
-          ) : (
+          )}
+
+          {activeTab === "savedProfessors" && (
+            <section className="space-y-6">
+              <SaveProfessors professorProfile={professorProfile} setProfessorProfile={setProfessorProfile} setActiveTab={setActiveTab} />
+            </section>
+          )}
+
+          {activeTab === "ratings" && (
             <section className="space-y-6">
               <h3 className="text-base font-semibold text-gray-900">Reviews</h3>
               {professorProfile.reviews?.length ? (

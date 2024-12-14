@@ -88,4 +88,56 @@ const removeProfessorCourse = async (id, institution, selectedDepartment, select
   }
 };
 
-export default { indexProfessors, addProfessorCourse, removeProfessorCourse };
+const addProfessorToBookmarks = async (id) => {
+  try {
+    const res = await fetch(`${BASE_URL}/professors/${id}/bookmark`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Request failed with status ${res.status}`);
+    }
+
+    const json = await res.json();
+    if (json.error) {
+      throw new Error(json.error);
+    }
+
+    return json;
+
+  } catch (error) {
+    console.error("Error bookmarking professor:", error);
+    return { message: "Failed to bookmark professor" };
+  }
+};
+
+const removeProfessorFromBookmarks = async (id) => {
+  try {
+    const res = await fetch(`${BASE_URL}/professors/${id}/bookmark`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Request failed with status ${res.status}`);
+    }
+
+    const json = await res.json();
+    if (json.error) {
+      throw new Error(json.error);
+    }
+
+    return json;
+
+  } catch (error) {
+    console.error("Error bookmarking professor:", error);
+    return { message: "Failed to bookmark professor" };
+  }
+};
+
+export default { indexProfessors, addProfessorCourse, removeProfessorCourse, addProfessorToBookmarks, removeProfessorFromBookmarks };

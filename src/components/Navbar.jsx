@@ -45,7 +45,6 @@ const Navbar = ({ user, handleSignout }) => {
         </div>
 
         <div className="hidden lg:flex lg:flex-1 lg:justify-center space-x-8">
-          {/* Render Institution and Professor links for students, professors, and guests */}
           {(user?.role === "professor" || user?.role === "student" || isGuest) && (
             <>
               <Link
@@ -63,7 +62,6 @@ const Navbar = ({ user, handleSignout }) => {
             </>
           )}
 
-          {/* Render Profile link for professors and students */}
           {user && (user?.role === "professor" || user?.role === "student") && (
             <Link
               to={`/profile/${user.Id}`}

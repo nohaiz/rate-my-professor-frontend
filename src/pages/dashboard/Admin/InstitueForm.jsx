@@ -50,8 +50,8 @@ const InstituteForm = ({ onCancel, onSave, deptList, editEntity }) => {
     } else if (location.length < 3 || location.length > 50) {
       newErrors.location = "Location must be between 3 and 50 characters.";
       isValid = false;
-    } else if (!/^[a-zA-Z\s]+$/.test(location)) {
-      newErrors.location = "Location can only contain letters and spaces.";
+    } else if (!/^[a-zA-Z\s,]+$/.test(location)) {
+      newErrors.location = "Location can only contain letters, spaces, and commas.";
       isValid = false;
     }
 
