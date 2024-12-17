@@ -35,6 +35,36 @@ const indexCourses = async (page, limit) => {
   }
 };
 
+const getCourse = async (id) => {
+  try {
+    const url = new URL(`${BASE_URL}/courses/${id}`);
+
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Request failed with status ${res.status}`);
+    }
+
+    const json = await res.json();
+
+    if (json.error) {
+      throw new Error(json.error);
+    }
+
+    return json;
+
+  } catch (error) {
+    console.error("Error fetching course:", error);
+    return { course: null };
+  }
+};
+
+
 const deleteCourse = async (id) => {
   try {
     const url = new URL(`${BASE_URL}/admin/courses/${id}`);
@@ -116,4 +146,4 @@ const updateCourse = async (id, data) => {
   }
 };
 
-export default { indexCourses, deleteCourse, createCourse, updateCourse };
+export default { indexCourses, getCourse, deleteCourse, createCourse, updateCourse };

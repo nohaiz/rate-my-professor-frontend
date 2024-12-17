@@ -8,13 +8,11 @@ const InstituteForm = ({ onCancel, onSave, deptList, editEntity }) => {
   const [location, setLocation] = useState(editEntity ? editEntity.location : "");
   const [type, setType] = useState(editEntity ? editEntity.type : "");
   const [departments, setDepartments] = useState([]);
-  const [selectedDepartments, setSelectedDepartments] = useState(
-    editEntity && editEntity.departments
-      ? editEntity.departments.map((department) => ({
-        value: department._id,
-        label: department.name,
-      }))
-      : []
+  const [selectedDepartments, setSelectedDepartments] = useState(editEntity && editEntity.departments ? editEntity.departments.map((department) => ({
+    value: department._id,
+    label: department.name,
+  }))
+    : []
   );
   const [errors, setErrors] = useState({});
 
@@ -25,6 +23,8 @@ const InstituteForm = ({ onCancel, onSave, deptList, editEntity }) => {
     }));
     setDepartments(departmentOptions);
   }, [deptList]);
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();

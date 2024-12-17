@@ -16,6 +16,8 @@ import StudentProfile from './pages/dashboard/Student/StudentProfile';
 import ProfessorProfile from './pages/dashboard/Professor/ProfessorProfile';
 import AdminProfile from './pages/dashboard/Admin/AdminProfile';
 
+import ProfessorDetails from './pages/professor/ProfessorDetails';
+
 //  SERVICES
 import AuthServices from '../services/AuthServices'
 
@@ -42,15 +44,19 @@ function App() {
         <Route path='auth/sign-up' element={<SignUpForm />}></Route>
         {/* PRIVATE ROUTES */}
         {user ? (
-          user.role === "student" ? (
-            <Route path="/profile/:id" element={<StudentProfile handleSignout={handleSignout} />} />
-          ) : user.role === "professor" ? (
-            <Route path="/profile/:id" element={<ProfessorProfile handleSignout={handleSignout} />} />
-          ) : (
-            <Route path="/dashboard/:id" element={<AdminProfile handleSignout={handleSignout} user={user} />} />
-          )
-        ) : <></>}
-
+          <>
+            <Route path="/professors/:id" element={<ProfessorDetails />} />
+            {user.role === "student" ? (
+              <Route path="/profile/:id" element={<StudentProfile handleSignout={handleSignout} />} />
+            ) : user.role === "professor" ? (
+              <Route path="/profile/:id" element={<ProfessorProfile handleSignout={handleSignout} />} />
+            ) : (
+              <Route path="/dashboard/:id" element={<AdminProfile handleSignout={handleSignout} user={user} />} />
+            )}
+          </>
+        ) : (
+          <></>
+        )}
       </Routes >
     </>
   )

@@ -33,6 +33,31 @@ const indexProfessors = async (page, limit, name = '') => {
   }
 };
 
+const getProfessor = async (professorId) => {
+  try {
+    const url = new URL(`${BASE_URL}/professors/${professorId}`);
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    if (!res.ok) {
+      throw new Error(`Request failed with status ${res.status}`);
+    }
+    const json = await res.json();
+
+    if (json.error) {
+      throw new Error(json.error);
+    }
+    return json;
+
+  } catch (error) {
+    console.error("Error fetching professors:", error);
+    return { professorsData: [], totalProfessors: 0 };
+  }
+};
+
 const addProfessorCourse = async (id, institution, selectedDepartment, selectedCourse) => {
   try {
     const res = await fetch(`${BASE_URL}/professors/${id}`, {
@@ -140,4 +165,4 @@ const removeProfessorFromBookmarks = async (id) => {
   }
 };
 
-export default { indexProfessors, addProfessorCourse, removeProfessorCourse, addProfessorToBookmarks, removeProfessorFromBookmarks };
+export default { indexProfessors, getProfessor, addProfessorCourse, removeProfessorCourse, addProfessorToBookmarks, removeProfessorFromBookmarks };

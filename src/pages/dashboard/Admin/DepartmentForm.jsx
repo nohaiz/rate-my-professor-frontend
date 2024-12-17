@@ -1,30 +1,66 @@
 import React, { useState, useEffect } from "react";
 import { AiOutlineClose } from "react-icons/ai";
 import Select from "react-select";
+
 import DepartmentService from "../../../../services/DepartmentService";
 
-const DepartmentForm = ({ onCancel, onSave, courseList, editEntity }) => {
+const DepartmentForm = ({ onCancel, onSave, courseList, editEntity, institutes }) => {
   const [name, setName] = useState(editEntity ? editEntity.name : "");
   const [courses, setCourses] = useState([]);
-  const [selectedCourses, setSelectedCourses] = useState(
-    editEntity && editEntity.courses
-      ? editEntity.courses.map((course) => ({
-        value: course._id,
-        label: course.title,
-      }))
-      : []
+  const [selectedCourses, setSelectedCourses] = useState(editEntity && editEntity.courses ? editEntity.courses.map((course) => ({
+    value: course._id,
+    label: course.title,
+  }))
+    : []
   );
 
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    const courseOptions = courseList.map((course) => ({
-      value: course._id,
-      label: course.title,
-    }));
-    setCourses(courseOptions);
-  }, [courseList]);
-
+    const filterCourses = () => {
+      try {
+        const departmentInstitute = institutes.find(institute => 
+          institute.departments.some(department => department._id === editEntity._id)
+        );
+  
+        if (!departmentInstitute) return;
+  
+        const availableCourses = courseList.map(course => {
+          if (!course.professors || course.professors.length === 0) {
+            return {
+              value: course._id,
+              label: course.title,
+            };
+          }
+  
+          const isValidForInstitute = course.professors.every(professor =>
+            professor.institution === departmentInstitute._id
+          );
+  
+          if (!isValidForInstitute) return null;
+  
+          const isAssignedElsewhere = departmentInstitute.departments.some(department =>
+            department._id !== editEntity._id && department.courses.some(existingCourse => existingCourse._id === course._id)
+          );
+          
+          if (isAssignedElsewhere) return null;
+  
+          return {
+            value: course._id,
+            label: course.title,
+          };
+        }).filter(Boolean); 
+  
+        setCourses(availableCourses);
+      } catch (err) {
+        console.error("Error filtering courses:", err);
+      }
+    };
+  
+    filterCourses();
+  }, [courseList, institutes, editEntity]);
+  
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
@@ -52,7 +88,7 @@ const DepartmentForm = ({ onCancel, onSave, courseList, editEntity }) => {
 
     const departmentData = {
       name,
-      courses: selectedCourses.map(course => course.value),
+      courses: selectedCourses.map((course) => course.value),
     };
 
     try {

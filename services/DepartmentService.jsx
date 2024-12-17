@@ -33,6 +33,36 @@ const indexDepartments = async (page, limit) => {
   }
 };
 
+const getDepartment = async (id) => {
+  try {
+    const url = new URL(`${BASE_URL}/departments/${id}`);
+
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Request failed with status ${res.status}`);
+    }
+
+    const json = await res.json();
+
+    if (json.error) {
+      throw new Error(json.error);
+    }
+
+    return json;
+
+  } catch (error) {
+    console.error("Error fetching department:", error);
+    return null;
+  }
+};
+
+
 const deleteDepartment = async (id) => {
   try {
     const url = new URL(`${BASE_URL}/admin/departments/${id}`);
@@ -114,4 +144,4 @@ const updateDepartment = async (id, data) => {
   }
 };
 
-export default { indexDepartments, deleteDepartment, createDepartment, updateDepartment };
+export default { indexDepartments, getDepartment, deleteDepartment, createDepartment, updateDepartment };

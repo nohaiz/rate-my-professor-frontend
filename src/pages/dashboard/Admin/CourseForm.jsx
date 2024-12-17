@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { AiOutlineClose } from "react-icons/ai";
+
 import CourseServices from "../../../../services/CourseServices";
 import ProfessorServices from "../../../../services/ProfessorServices";
 import Select from "react-select";
@@ -9,13 +10,11 @@ const CourseForm = ({ onCancel, onSave, editEntity }) => {
   const [code, setCode] = useState(editEntity ? editEntity.code : "");
   const [credits, setCredits] = useState(editEntity ? editEntity.credits : 0);
   const [professors, setProfessors] = useState([]);
-  const [selectedProfessors, setSelectedProfessors] = useState(
-    editEntity && editEntity.professors
-      ? editEntity.professors.map((professor) => ({
-        value: professor._id,
-        label: `${professor.firstName} ${professor.lastName}`,
-      }))
-      : []
+  const [selectedProfessors, setSelectedProfessors] = useState(editEntity && editEntity.professors ? editEntity.professors.map((professor) => ({
+    value: professor._id,
+    label: `${professor.firstName} ${professor.lastName}`,
+  }))
+    : []
   );
   const [errors, setErrors] = useState({});
 
@@ -37,14 +36,63 @@ const CourseForm = ({ onCancel, onSave, editEntity }) => {
   }, []);
 
   useEffect(() => {
-    if (professors.length > 0 && selectedProfessors.length > 0) {
-      const updatedSelectedProfessors = selectedProfessors.filter((selected) =>
-        professors.some((professor) => professor.value === selected.value)
-      );
+    const fetchFilteredProfessors = async () => {
+      try {
+        const allProfessors = await ProfessorServices.indexProfessors();
 
-      setSelectedProfessors(updatedSelectedProfessors);
-    }
-  }, [professors]);
+        if (selectedProfessors.length === 0) {
+          setProfessors(
+            allProfessors.professorsData.map((professor) => ({
+              value: professor._id,
+              label: `${professor.firstName} ${professor.lastName}`,
+            }))
+          );
+          return;
+        }
+
+        const institutionIds = await Promise.all(
+          selectedProfessors.map(async (selected) => {
+            if (selected?.value) {
+              try {
+                const professor = await ProfessorServices.getProfessor(selected.value);
+                return professor?.professerData?.institution._id;
+              } catch (error) {
+                console.error(`Failed to fetch professor with ID ${selected.value}:`, error);
+                return null;
+              }
+            }
+            return null;
+          })
+        );
+
+        const uniqueInstitutionIds = [...new Set(institutionIds.filter(id => id !== null))];
+
+        if (uniqueInstitutionIds.length === 0) {
+          setProfessors(
+            allProfessors.professorsData.map((professor) => ({
+              value: professor._id,
+              label: `${professor.firstName} ${professor.lastName}`,
+            }))
+          );
+        } else {
+          const filteredProfessors = allProfessors.professorsData.filter(
+            (professor) => uniqueInstitutionIds.includes(professor.institution._id)
+          );
+
+          setProfessors(
+            filteredProfessors.map((professor) => ({
+              value: professor._id,
+              label: `${professor.firstName} ${professor.lastName}`,
+            }))
+          );
+        }
+      } catch (err) {
+        console.error("Error fetching professors or institution data:", err);
+      }
+    };
+    fetchFilteredProfessors();
+  }, [selectedProfessors]);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();

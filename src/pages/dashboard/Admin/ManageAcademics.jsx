@@ -22,6 +22,7 @@ const ManageAcademics = () => {
   const [deptList, setDeptList] = useState([]);
   const [courseList, setCourseList] = useState([]);
   const [editEntity, setEditEntity] = useState(null);
+  const [institutes, setInstitutes] = useState([]);
   const hasScrolled = useRef(false);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -97,8 +98,17 @@ const ManageAcademics = () => {
         console.error(error);
       }
     };
+    const fetchInstitutes = async () => {
+      try {
+        const responseInstitute = await InstituteServices.indexInstitutes();
+        setInstitutes(responseInstitute.institutions || [])
+      } catch (error) {
+        console.error(error)
+      }
+    }
     fetchCourses();
     fetchDepartments();
+    fetchInstitutes();
   }, [filteredEntities]);
 
   useEffect(() => {
@@ -278,7 +288,7 @@ const ManageAcademics = () => {
       {showForm ? (
         <>
           {entityType === "Institute" && <InstituteForm onCancel={handleCancelForm} onSave={handleSaveEntity} deptList={deptList} editEntity={editEntity} />}
-          {entityType === "Department" && <DepartmentForm onCancel={handleCancelForm} onSave={handleSaveEntity} courseList={courseList} editEntity={editEntity} />}
+          {entityType === "Department" && <DepartmentForm onCancel={handleCancelForm} onSave={handleSaveEntity} courseList={courseList} editEntity={editEntity} institutes={institutes} />}
           {entityType === "Course" && <CourseForm onCancel={handleCancelForm} onSave={handleSaveEntity} editEntity={editEntity} />}
         </>
       ) : (
@@ -362,7 +372,11 @@ const ManageAcademics = () => {
                       </th>
                     )
                   }
-
+                  {entityType === "Department" ?
+                    <th className="px-6 py-4 text-left border-b border-gray-900 font-medium">Institution</th>
+                    :
+                    <></>
+                  }
                   <th className="px-6 py-4 text-left border-b border-gray-900 font-medium">Actions</th>
                 </tr>
               </thead>
@@ -388,6 +402,20 @@ const ManageAcademics = () => {
                       :
                       <td className="px-6 py-4 text-gray-500 font-semibold">{renderDetailsColumn(entity)}</td>
                     }
+                    {entityType === "Department" && (
+                      <td className="px-6 py-4 text-gray-500 font-semibold">
+                        {institutes
+                          .filter((inst) =>
+                            inst.departments &&
+                            inst.departments.some((dept) => dept && dept._id === entity._id)
+                          )
+                          .map((inst) => (
+                            <div key={inst._id}>
+                              <span>{inst.name}</span>
+                            </div>
+                          ))}
+                      </td>
+                    )}
                     <td className="px-6 py-4">
                       <button
                         className="text-black hover:text-gray-800 text-sm"
