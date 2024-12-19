@@ -58,7 +58,7 @@ const getProfessor = async (professorId) => {
   }
 };
 
-const addProfessorCourse = async (id, institution, selectedDepartment, selectedCourse) => {
+const addProfessorCourse = async (id, institution, selectedCourse) => {
   try {
     const res = await fetch(`${BASE_URL}/professors/${id}`, {
       method: 'PUT',
@@ -66,7 +66,7 @@ const addProfessorCourse = async (id, institution, selectedDepartment, selectedC
         Authorization: `Bearer ${localStorage.getItem("token")}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ institution, selectedDepartment, selectedCourse }),
+      body: JSON.stringify({ institution, selectedCourse }),
     });
     if (!res.ok) {
       throw new Error(`Request failed with status ${res.status}`);
@@ -87,8 +87,8 @@ const addProfessorCourse = async (id, institution, selectedDepartment, selectedC
 
 const removeProfessorCourse = async (id, institution, selectedDepartment, selectedCourse) => {
   try {
-    const res = await fetch(`${BASE_URL}/professors/${id}`, {
-      method: 'DELETE',
+    const res = await fetch(`${BASE_URL}/professors/${id}/remove-course`, {
+      method: 'PUT',
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
         'Content-Type': 'application/json',
@@ -165,4 +165,135 @@ const removeProfessorFromBookmarks = async (id) => {
   }
 };
 
-export default { indexProfessors, getProfessor, addProfessorCourse, removeProfessorCourse, addProfessorToBookmarks, removeProfessorFromBookmarks };
+const createProfessorReview = async (id, formData) => {
+  try {
+    const url = new URL(`${BASE_URL}/professors/${id}/review`);
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+    });
+
+    if (!res.ok) {
+      const errorResponse = await res.json();
+      return { status: res.status, error: errorResponse.error || `Error ${res.status}: ${res.statusText}` };
+    }
+
+    const json = await res.json();
+    return json;
+
+  } catch (error) {
+    console.error("Error creating institute:", error);
+  }
+}
+
+const updateProfessorReview = async (id, reviewId, formData) => {
+  try {
+    const url = new URL(`${BASE_URL}/professors/${id}/review/${reviewId}`);
+
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        'Content-Type': 'application/json',
+
+      },
+      body: JSON.stringify(formData),
+    });
+
+    if (!res.ok) {
+      const errorResponse = await res.json();
+      return { status: res.status, error: errorResponse.error || `Error ${res.status}: ${res.statusText}` };
+    }
+
+    const json = await res.json();
+    return json;
+
+  } catch (error) {
+    console.error("Error updating review:", error);
+  }
+};
+
+const deleteProfessorReview = async (id, reviewId) => {
+  try {
+    const url = new URL(`${BASE_URL}/professors/${id}/review/${reviewId}`);
+
+    const res = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    if (!res.ok) {
+      const errorResponse = await res.json();
+      return { status: res.status, error: errorResponse.error || `Error ${res.status}: ${res.statusText}` };
+    }
+
+    const json = await res.json();
+    return json;
+
+  } catch (error) {
+    console.error("Error deleting review:", error);
+    return { message: "Failed to delete review" };
+  }
+};
+
+
+
+const addProfessorComment = async (id, reviewId, comment) => {
+  try {
+    const url = new URL(`${BASE_URL}/professors/${id}/reviews/${reviewId}/comments`);
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ comment }),
+    });
+
+    if (!res.ok) {
+      const errorResponse = await res.json();
+      return { status: res.status, error: errorResponse.error || `Error ${res.status}: ${res.statusText}` };
+    }
+
+    const json = await res.json();
+    return json;
+
+  } catch (error) {
+    console.error("Error updating review:", error);
+  }
+}
+const removeProfessorComment = async (id, reviewId, commentId) => {
+  try {
+    const url = new URL(`${BASE_URL}/professors/${id}/reviews/${reviewId}/comments/${commentId}`);
+
+    const res = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    if (!res.ok) {
+      const errorResponse = await res.json();
+      return { status: res.status, error: errorResponse.error || `Error ${res.status}: ${res.statusText}` };
+    }
+
+    const json = await res.json();
+    return json;
+
+  } catch (error) {
+    console.error("Error removing comment:", error);
+  }
+};
+
+
+
+export default { indexProfessors, getProfessor, addProfessorCourse, removeProfessorCourse, addProfessorToBookmarks, removeProfessorFromBookmarks, createProfessorReview, updateProfessorReview, deleteProfessorReview, addProfessorComment, removeProfessorComment };

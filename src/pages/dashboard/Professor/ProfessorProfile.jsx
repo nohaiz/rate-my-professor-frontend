@@ -5,7 +5,6 @@ import { AiOutlineEdit, AiOutlineDelete, AiOutlineClose } from "react-icons/ai";
 import ProfileService from "../../../../services/ProfileService";
 import ProfessorProfileForm from "./ProfessorProfileForm";
 import ProfessorServices from "../../../../services/ProfessorServices";
-
 import SaveProfessors from "../../../components/SavedProfessors";
 
 const ProfessorProfile = ({ handleSignout }) => {
@@ -14,13 +13,13 @@ const ProfessorProfile = ({ handleSignout }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
   const [courses, setCourses] = useState([]);
+  const [unassignedCourses, setUnassignedCourses] = useState([]);
   const navigate = useNavigate();
 
   const fetchProfessorProfile = async () => {
     try {
       const response = await ProfileService.getProfile(id);
       setProfessorProfile(response);
-
       if (response?.professorAccount?.institution?.departments) {
         const allCourses = response.professorAccount.institution.departments.reduce(
           (courses, dept) => [...courses, ...dept.courses],

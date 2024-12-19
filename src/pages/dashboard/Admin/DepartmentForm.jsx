@@ -19,48 +19,45 @@ const DepartmentForm = ({ onCancel, onSave, courseList, editEntity, institutes }
   useEffect(() => {
     const filterCourses = () => {
       try {
-        const departmentInstitute = institutes.find(institute => 
+        const departmentInstitute = institutes.find(institute =>
           institute.departments.some(department => department._id === editEntity._id)
         );
-  
+
         if (!departmentInstitute) return;
-  
+
         const availableCourses = courseList.map(course => {
           if (!course.professors || course.professors.length === 0) {
-            return {
-              value: course._id,
-              label: course.title,
-            };
+            return null;
           }
-  
+
           const isValidForInstitute = course.professors.every(professor =>
             professor.institution === departmentInstitute._id
           );
-  
+
           if (!isValidForInstitute) return null;
-  
+
           const isAssignedElsewhere = departmentInstitute.departments.some(department =>
             department._id !== editEntity._id && department.courses.some(existingCourse => existingCourse._id === course._id)
           );
-          
+
           if (isAssignedElsewhere) return null;
-  
+
           return {
             value: course._id,
             label: course.title,
           };
-        }).filter(Boolean); 
-  
+        }).filter(Boolean);
+
         setCourses(availableCourses);
       } catch (err) {
         console.error("Error filtering courses:", err);
       }
     };
-  
+
     filterCourses();
   }, [courseList, institutes, editEntity]);
-  
-  
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});

@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import DepartmentService from "../../../../services/DepartmentService";
-import ProfessorServices from "../../../../services/ProfessorServices";
-import ProfileService from "../../../../services/ProfileService";
-import InstituteServices from "../../../../services/InstituteServices";
 
-const ProfessorProfileForm = ({ professorProfile, setProfessorProfile, setIsEditing, courses }) => {
+import CourseServices from "../../../../services/CourseServices";
+import ProfileService from "../../../../services/ProfileService";
+import ProfessorServices from "../../../../services/ProfessorServices";
+
+const ProfessorProfileForm = ({ professorProfile, setProfessorProfile, setIsEditing }) => {
   const { id } = useParams();
 
   const [formData, setFormData] = useState({
@@ -13,33 +13,35 @@ const ProfessorProfileForm = ({ professorProfile, setProfessorProfile, setIsEdit
     email: professorProfile?.email || '',
     institution: professorProfile?.professorAccount?.institution?.name || '',
     bio: professorProfile?.professorAccount?.bio || '',
-    selectedDepartment: professorProfile?.professorAccount?.department?._id || '',
     selectedCourse: '',
     password: '',
     confirmPassword: ''
   });
 
-  const [departments, setDepartments] = useState([]);
+  const [availableCourses, setAvailableCourses] = useState([]);
   const [errors, setErrors] = useState({});
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   useEffect(() => {
-    const fetchDepartments = async () => {
+    const fetchCourses = async () => {
       try {
-        const response = await DepartmentService.indexDepartments();
-        const data = await InstituteServices.getInstitute(professorProfile?.professorAccount?.institution?._id);
-        const ans = data.institute.departments.map((institue) =>
-          response.departments.filter((dep) => institue._id.toString() === dep._id.toString())
-        );
-        const departmentsObject = Object.assign(ans.flat());
-        setDepartments(departmentsObject);
+        const response = await CourseServices.indexCourses();
+        const professorInstitutionId = professorProfile?.professorAccount?.institution?._id;
 
+        const filteredCourses = response.courses.filter(course => {
+          return course.professors.some(professor =>
+            professor.institution._id === professorInstitutionId
+          ) || course.professors.length === 0;
+        });
+
+        setAvailableCourses(filteredCourses);
       } catch (error) {
-        console.error('Error fetching departments:', error);
+        console.error('Error fetching courses:', error);
       }
     };
-    fetchDepartments();
-  }, [id]);
+
+    fetchCourses();
+  }, [id, professorProfile?.professorAccount?.institution]);
 
   const handleChange = ({ target: { name, value } }) => {
     setFormData((prevState) => ({ ...prevState, [name]: value }));
@@ -84,21 +86,16 @@ const ProfessorProfileForm = ({ professorProfile, setProfessorProfile, setIsEdit
 
     const backendData = {
       ...updatedFormData,
-      ...(formData.selectedDepartment && { selectedDepartment: formData.selectedDepartment }),
       ...(formData.selectedCourse && { selectedCourse: formData.selectedCourse }),
       ...(formData.bio && { bio: formData.bio })
     };
 
     try {
-      if (formData.selectedDepartment && formData.selectedCourse) {
-        await ProfessorServices.addProfessorCourse(
-          professorProfile._id, professorProfile.professorAccount?.institution?._id, formData.selectedDepartment, formData.selectedCourse
-        );
-      }
-
       await ProfileService.updateProfile(backendData, id);
       const response = await ProfileService.getProfile(id);
-      setProfessorProfile(response);
+      if (formData.selectedCourse) {
+        await ProfessorServices.addProfessorCourse(id, professorProfile?.professorAccount?.institution?._id, formData.selectedCourse);
+      } setProfessorProfile(response);
       resetForm();
       setIsEditing(false);
     } catch (error) {
@@ -112,7 +109,6 @@ const ProfessorProfileForm = ({ professorProfile, setProfessorProfile, setIsEdit
       email: professorProfile?.email || '',
       institution: professorProfile?.professorAccount?.institution?.name || '',
       bio: professorProfile?.professorAccount?.bio || '',
-      selectedDepartment: professorProfile?.professorAccount?.department?._id || '',
       selectedCourse: '',
       password: '',
       confirmPassword: ''
@@ -146,7 +142,6 @@ const ProfessorProfileForm = ({ professorProfile, setProfessorProfile, setIsEdit
     </div>
   );
 
-
   const renderPasswordFields = () => (
     <>
       {renderInputField('Password', 'password', 'password')}
@@ -154,55 +149,24 @@ const ProfessorProfileForm = ({ professorProfile, setProfessorProfile, setIsEdit
     </>
   );
 
-  const renderDepartmentAndCoursesDropdown = () => {
-    const selectedDepartment = departments.find(department => department._id === formData.selectedDepartment);
-    const availableCourses = selectedDepartment
-      ? selectedDepartment.courses.filter(course =>
-        !courses.some(existingCourse => existingCourse._id === course._id)
-      )
-      : [];
-
-    return (
-      <div>
-
-        <div className="flex flex-col space-y-2">
-          <label className="text-sm font-medium text-gray-900">Department (Optional)</label>
-          <select
-            name="selectedDepartment"
-            value={formData.selectedDepartment}
-            onChange={handleChange}
-            className="sm:text-sm/6 border border-gray-300 p-2 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-          >
-            <option value="">Select Department</option>
-            {departments.map((department) => (
-              <option key={department._id} value={department._id}>
-                {department.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {formData.selectedDepartment && (
-          <div className="flex flex-col space-y-2 mt-4">
-            <label className="text-sm font-medium text-gray-900">Course</label>
-            <select
-              name="selectedCourse"
-              value={formData.selectedCourse}
-              onChange={handleChange}
-              className="sm:text-sm/6 border border-gray-300 p-2 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
-            >
-              <option value="">Select Course</option>
-              {availableCourses.map((course) => (
-                <option key={course._id} value={course._id}>
-                  {course.title} ({course.code})
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-      </div>
-    );
-  };
+  const renderCoursesDropdown = () => (
+    <div className="flex flex-col space-y-2">
+      <label className="text-sm font-medium text-gray-900">Course</label>
+      <select
+        name="selectedCourse"
+        value={formData.selectedCourse}
+        onChange={handleChange}
+        className="sm:text-sm/6 border border-gray-300 p-2 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+      >
+        <option value="">Select Course</option>
+        {availableCourses.map((course) => (
+          <option key={course._id} value={course._id}>
+            {course.title} ({course.code})
+          </option>
+        ))}
+      </select>
+    </div>
+  );
 
   return (
     <div className="flex items-center justify-center min-h-screen">
@@ -222,7 +186,7 @@ const ProfessorProfileForm = ({ professorProfile, setProfessorProfile, setIsEdit
             />
           </div>
           {renderInputField('Biography', 'bio', 'text', false, true)}
-          {renderDepartmentAndCoursesDropdown()}
+          {renderCoursesDropdown()}
 
           <div className="flex items-center space-x-1 mt-3">
             <input

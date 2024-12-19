@@ -17,6 +17,9 @@ import ProfessorProfile from './pages/dashboard/Professor/ProfessorProfile';
 import AdminProfile from './pages/dashboard/Admin/AdminProfile';
 
 import ProfessorDetails from './pages/professor/ProfessorDetails';
+import ProfessorReviewForm from './pages/professor/ProfessorReviewForm';
+
+import InstituteDetails from './pages/institute/InstituteDetails';
 
 //  SERVICES
 import AuthServices from '../services/AuthServices'
@@ -40,14 +43,21 @@ function App() {
         <Route path='/' element={<Home />} />
         <Route path='/institutes' element={<Institute />}></Route>
         <Route path='/professors' element={<Professor user={user} />}></Route>
+        <Route path='/institutions/:id' element={<InstituteDetails />}></Route>
+        <Route path="/professors/:id" element={<ProfessorDetails user={user} />} >
+          {user?.role === "student" ? (
+            <Route path="review" element={<ProfessorReviewForm />} />
+          ) : (
+            <Route path="review" element={<h2 className='ml-8 mb-8'>Unauthorized Access To Review</h2>} />
+          )}
+        </Route>
         <Route path='auth/sign-in' element={<SignInForm />}></Route>
         <Route path='auth/sign-up' element={<SignUpForm />}></Route>
         {/* PRIVATE ROUTES */}
         {user ? (
           <>
-            <Route path="/professors/:id" element={<ProfessorDetails />} />
             {user.role === "student" ? (
-              <Route path="/profile/:id" element={<StudentProfile handleSignout={handleSignout} />} />
+              <Route path="/profile/:id" element={<StudentProfile handleSignout={handleSignout} user={user}/>} />
             ) : user.role === "professor" ? (
               <Route path="/profile/:id" element={<ProfessorProfile handleSignout={handleSignout} />} />
             ) : (

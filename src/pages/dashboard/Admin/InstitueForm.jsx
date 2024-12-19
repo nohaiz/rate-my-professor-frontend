@@ -3,7 +3,7 @@ import { AiOutlineClose } from "react-icons/ai";
 import Select from "react-select";
 import InstituteServices from "../../../../services/InstituteServices";
 
-const InstituteForm = ({ onCancel, onSave, deptList, editEntity }) => {
+const InstituteForm = ({ onCancel, onSave, deptList, editEntity, institutes }) => {
   const [name, setName] = useState(editEntity ? editEntity.name : "");
   const [location, setLocation] = useState(editEntity ? editEntity.location : "");
   const [type, setType] = useState(editEntity ? editEntity.type : "");
@@ -17,12 +17,17 @@ const InstituteForm = ({ onCancel, onSave, deptList, editEntity }) => {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    const departmentOptions = deptList.map((dept) => ({
-      value: dept._id,
-      label: dept.name,
-    }));
-    setDepartments(departmentOptions);
-  }, [deptList]);
+    const assignedDepartments = institutes.flatMap((institute) => institute.departments);
+
+    const availableDepartments = deptList
+      .filter((dept) => !assignedDepartments.some((assignedDept) => assignedDept._id === dept._id)) 
+      .map((dept) => ({
+        value: dept._id,
+        label: dept.name,
+      }));
+
+    setDepartments(availableDepartments);
+  }, [deptList, institutes, editEntity]);
 
 
 

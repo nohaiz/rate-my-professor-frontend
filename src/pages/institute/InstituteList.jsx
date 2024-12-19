@@ -58,10 +58,10 @@ const InstituteList = () => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between mi-2">
                     <div className="flex flex-col justify-center space-y-2">
-                      <h3 className="text-xl font-semibold text-gray-900">
+                      <h3 className="text-lg font-bold text-gray-900">
                         {institution.name}
                       </h3>
-                      <p className="text-gray-600">{institution.location}</p>
+                      <p className="text-gray-900">{institution.location}</p>
                     </div>
 
                     <div className="flex flex-col items-center justify-center space-y-1 text-center">

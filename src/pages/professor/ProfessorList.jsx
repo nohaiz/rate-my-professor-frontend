@@ -31,19 +31,20 @@ const ProfessorList = ({ user }) => {
   }, [query, currentPage]);
 
   useEffect(() => {
-    const userId = user.Id
-    const fetchBookmarkedProfessors = async () => {
-      try {
-        const response = await ProfileService.getProfile(userId);
+    if (user) {
+      const userId = user.Id;
+      const fetchBookmarkedProfessors = async () => {
+        try {
+          const response = await ProfileService.getProfile(userId);
+          setBookmarkedProfessors(response.bookMarkedProfessor || []);
+        } catch (error) {
+          console.error('Error fetching bookmarked professors:', error);
+        }
+      };
 
-        setBookmarkedProfessors(response.bookMarkedProfessor);
-      } catch (error) {
-        console.error('Error fetching bookmarked professors:', error);
-      }
-    };
-
-    fetchBookmarkedProfessors();
-  }, [bookmarkedProfessors]);
+      fetchBookmarkedProfessors();
+    }
+  }, [user]);  // Re-run when 'user' changes, fetch initial bookmark data
 
   const getRatingColor = (rating) => {
     if (rating >= 4.5) return "bg-lime-400";
@@ -59,15 +60,20 @@ const ProfessorList = ({ user }) => {
 
   const handleBookmark = async (id) => {
     try {
-      if (bookmarkedProfessors.some((professor) => professor._id === id)) {
+      const isBookmarked = bookmarkedProfessors.some((professor) => professor._id === id);
+
+      if (isBookmarked) {
+        // Remove from bookmarks
         await ProfessorServices.removeProfessorFromBookmarks(id);
-        setBookmarkedProfessors(prev => prev.filter(professorId => professorId !== id));
+        setBookmarkedProfessors((prev) => prev.filter((professor) => professor._id !== id));
       } else {
+        // Add to bookmarks
         await ProfessorServices.addProfessorToBookmarks(id);
-        setBookmarkedProfessors(prev => [...prev, id]);
+        const updatedProfessor = professors.find((professor) => professor._id === id);
+        setBookmarkedProfessors((prev) => [...prev, updatedProfessor]);
       }
     } catch (error) {
-      console.error(error);
+      console.error('Error updating bookmark:', error);
     }
   };
 
@@ -80,19 +86,20 @@ const ProfessorList = ({ user }) => {
         <div className="space-y-8">
           {professors.length > 0 ? (
             professors.map((professor) => (
-
               <div
                 key={professor._id}
                 className="rounded-3xl bg-indigo-100 shadow-lg overflow-hidden p-5 hover:shadow-xl transition-all duration-300 max-w-3xl mx-auto"
               >
                 <div className="flex justify-end">
-                  <button onClick={() => handleBookmark(professor._id)}>
-                    {bookmarkedProfessors.some((professorObj) => professorObj._id === professor._id) ? (
-                      <AiFillHeart className="text-red-500 text-xl" />
-                    ) : (
-                      <AiOutlineHeart className="text-gray-400 text-xl" />
-                    )}
-                  </button>
+                  {user ? (
+                    <button onClick={() => handleBookmark(professor._id)}>
+                      {bookmarkedProfessors.some((professorObj) => professorObj._id === professor._id) ? (
+                        <AiFillHeart className="text-red-500 text-xl" />
+                      ) : (
+                        <AiOutlineHeart className="text-gray-400 text-xl" />
+                      )}
+                    </button>
+                  ) : null}
                 </div>
 
                 <div className="space-y-1">
@@ -101,22 +108,26 @@ const ProfessorList = ({ user }) => {
                       <p className="text-gray-600">Quality</p>
                       <div
                         className={`text-white font-semibold py-3 px-6 rounded-xl w-20 h-20 flex items-center justify-center text-xl ${getRatingColor(
-                          Math.round(professor.averageRating)
+                          (professor.averageRating)?.toFixed(2)
                         )}`}
                       >
-                        {Math.round(professor.averageRating)}
+                        {(professor.averageRating)?.toFixed(2)}
                       </div>
-                      <p className="text-gray-500 text-sm">({professor.reviewCount} ratings)</p>
+                      <p className="text-gray-500 text-sm">({professor.reviewCount} ratings count)</p>
                     </div>
                     <div className="flex flex-col justify-center space-y-1 ml-5 mt-3">
-                      <h3 className="text-xl font-semibold text-gray-900">
+                      <h3 className="text-lg font-bold text-gray-900">
                         {professor.firstName} {professor.lastName}
                       </h3>
-                      <p className="text-gray-600">
+                      <p className="text-gray-900 font-bold text-s">
                         {professor.institution ? professor.institution.name : "Unknown University"}
                       </p>
-                      <p className="text-gray-600">
-                        {professor.department ? professor.department.name : "Unknown Department"}
+                      <p className="text-gray-900">
+                        {professor.department && professor.department.length > 0
+                          ? professor.department.map((department, index) => (
+                            <p key={index} className="">{department.name || "Unknown Department"}</p>
+                          ))
+                          : <p>Unknown Department</p>}
                       </p>
                     </div>
                   </div>
@@ -162,7 +173,6 @@ const ProfessorList = ({ user }) => {
       </div>
     </div>
   );
-
 };
 
 export default ProfessorList;
