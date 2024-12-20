@@ -51,8 +51,21 @@ const ProfessorProfileForm = ({ professorProfile, setProfessorProfile, setIsEdit
     const newErrors = {};
     const [firstName, lastName] = formData.fullName.trim().split(' ', 2);
     if (!firstName || !lastName) newErrors.fullName = 'Enter full name';
+
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
     if (!formData.email.trim()) newErrors.email = 'Email required';
+    else if (!emailRegex.test(formData.email)) newErrors.email = 'Enter a valid email address';
+
     if (!formData.institution) newErrors.institution = 'Select institution';
+    if (!formData.selectedCourse) newErrors.selectedCourse = 'Select course';
+
+    if (formData.bio && formData.bio.length > 500) {
+      newErrors.bio = 'Bio cannot exceed 500 characters';
+    }
+    if (!formData.bio) {
+      newErrors.bio = 'Biography required';
+    }
 
     if (isChangingPassword) {
       const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
@@ -84,20 +97,35 @@ const ProfessorProfileForm = ({ professorProfile, setProfessorProfile, setIsEdit
 
     delete updatedFormData.fullName;
 
+    if (formData.email === professorProfile.email) {
+      delete updatedFormData.email;
+    }
     const backendData = {
       ...updatedFormData,
       ...(formData.selectedCourse && { selectedCourse: formData.selectedCourse }),
       ...(formData.bio && { bio: formData.bio })
     };
 
+    if (formData.email !== professorProfile.email) {
+      backendData.email = formData.email;
+    }
+
     try {
-      await ProfileService.updateProfile(backendData, id);
-      const response = await ProfileService.getProfile(id);
-      if (formData.selectedCourse) {
-        await ProfessorServices.addProfessorCourse(id, professorProfile?.professorAccount?.institution?._id, formData.selectedCourse);
-      } setProfessorProfile(response);
-      resetForm();
-      setIsEditing(false);
+      const updatedProfile = await ProfileService.updateProfile(backendData, id);
+      if (updatedProfile.error) {
+        const newErrors = {};
+        newErrors.email = updatedProfile.error
+        setErrors(newErrors)
+      }
+      else {
+        const response = await ProfileService.getProfile(id);
+        if (formData.selectedCourse) {
+          await ProfessorServices.addProfessorCourse(id, professorProfile?.professorAccount?.institution?._id, formData.selectedCourse);
+        }
+        setProfessorProfile(response);
+        resetForm();
+        setIsEditing(false);
+      }
     } catch (error) {
       console.error("Error updating professor profile:", error);
     }
@@ -165,6 +193,7 @@ const ProfessorProfileForm = ({ professorProfile, setProfessorProfile, setIsEdit
           </option>
         ))}
       </select>
+      {errors.selectedCourse && <div className="text-xs font-medium text-red-500 mt-1">{errors.selectedCourse}</div>}
     </div>
   );
 
@@ -173,7 +202,7 @@ const ProfessorProfileForm = ({ professorProfile, setProfessorProfile, setIsEdit
       <form onSubmit={handleSubmit} className="w-full max-w-md space-y-4 p-4">
         <div className="space-y-5">
           {renderInputField('Full Name', 'fullName')}
-          {renderInputField('Email Address', 'email', 'email', true)}
+          {renderInputField('Email Address', 'email', 'email', false)}
           {isChangingPassword && renderPasswordFields()}
           <div className="flex flex-col space-y-2">
             <label className="text-sm font-medium text-gray-900">Institution</label>

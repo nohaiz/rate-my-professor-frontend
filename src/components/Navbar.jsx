@@ -4,7 +4,6 @@ import { useState } from "react";
 const Navbar = ({ user, handleSignout }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Treat unauthenticated users as "guests"
   const isGuest = !user;
 
   return (

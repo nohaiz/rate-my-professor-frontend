@@ -11,7 +11,8 @@ const getProfile = async (id) => {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch profile');
+      const errorResponse = await response.json();
+      return { status: response.status, error: errorResponse.error || `Error ${response.status}: ${response.statusText}` };
     }
 
     const json = await response.json();
@@ -33,7 +34,8 @@ const updateProfile = async (formdata, id) => {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch profile');
+      const errorResponse = await response.json();
+      return { status: response.status, error: errorResponse.error || `Error ${response.status}: ${response.statusText}` };
     }
     const json = await response.json();
 

@@ -49,14 +49,17 @@ const StudentProfileForm = ({ studentProfile, setStudentProfile, setIsEditing })
       else if (!passwordRegex.test(formData.password)) newErrors.password = 'Weak password';
       if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords don’t match';
     }
-
+    if (!formData.fieldOfStudy) newErrors.fieldOfStudy = 'Field of study required'
     if (!formData.institution) newErrors.institution = 'Select institution';
-    if (!formData.fieldOfStudy.trim()) newErrors.fieldOfStudy = 'Field of study required';
 
     const gpa = String(formData.GPA).trim();
-    const gpaRegex = /^\d+(\.\d+)?$/;
-    if (!gpa || gpa === '') newErrors.GPA = 'GPA required';
-    else if (!gpaRegex.test(gpa)) newErrors.GPA = 'Invalid GPA';
+    const gpaRegex = /^(?:[0-4](?:\.\d{1,2})?|4(\.0{1,2})?)$/;
+
+    if (!gpa || gpa === '') {
+      newErrors.GPA = 'GPA required';
+    } else if (!gpaRegex.test(gpa)) {
+      newErrors.GPA = 'Invalid GPA';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -78,14 +81,22 @@ const StudentProfileForm = ({ studentProfile, setStudentProfile, setIsEditing })
       delete updatedFormData.password;
       delete updatedFormData.confirmPassword;
     }
-
+    if (formData.email === studentProfile.email) {
+      delete updatedFormData.email;
+    }
     delete updatedFormData.fullName;
 
     try {
       const response = await ProfileService.updateProfile(updatedFormData, id);
-      setStudentProfile(response);
-      resetForm();
-      setIsEditing(false);
+      if (response.error) {
+        const newErrors = {};
+        newErrors.email = response.error
+        setErrors(newErrors)
+      } else {
+        setStudentProfile(response);
+        resetForm();
+        setIsEditing(false);
+      }
     } catch (error) {
       console.error(error);
     }
@@ -154,7 +165,7 @@ const StudentProfileForm = ({ studentProfile, setStudentProfile, setIsEditing })
       <form onSubmit={handleSubmit} className="w-full max-w-md space-y-4 p-4">
         <div className="space-y-5">
           {renderInputField('Full Name', 'fullName', 'text', 'First & Last Name')}
-          {renderInputField('Email Address', 'email', 'email', '', true)}
+          {renderInputField('Email Address', 'email', 'email', '', false)}
 
           {isChangingPassword && (
             <>

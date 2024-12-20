@@ -37,13 +37,30 @@ const SignUpForm = () => {
   const validateSignUpForm = () => {
     const newErrors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const nameRegex = /^[a-zA-Z]+$/;
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
-    if (!firstName.trim()) newErrors.firstName = "First name is required";
-    if (!lastName.trim()) newErrors.lastName = "Last name is required";
-    if (!email.trim()) newErrors.email = "Email is required";
-    else if (!emailRegex.test(email)) newErrors.email = "Invalid email format";
-    if (!password.trim()) newErrors.password = "Password is required";
+    if (!email || !email.trim()) newErrors.email = "Email is required";
+    if (email && !emailRegex.test(email)) newErrors.email = "Invalid email format";
+
+    if (!firstName || !firstName.trim()) newErrors.firstName = "First name is required";
+    if (firstName && !nameRegex.test(firstName)) newErrors.firstName = "First name should only contain letters and no spacing";
+    if (firstName && (firstName.length < 3 || firstName.length > 15)) {
+      newErrors.firstName = "First name must be between 3 and 15 characters";
+    }
+
+    if (!lastName || !lastName.trim()) newErrors.lastName = "Last name is required";
+    if (lastName && !nameRegex.test(lastName)) newErrors.lastName = "Last name should only contain letters and no spacing";
+    if (lastName && (lastName.length < 3 || lastName.length > 15)) {
+      newErrors.lastName = "Last name must be between 3 and 15 characters";
+    }
+    if (!password || !password.trim()) newErrors.password = "Password is required";
+    if (password && !passwordRegex.test(password)) {
+      newErrors.password = "Password must be at least 8 characters and include an uppercase letter, lowercase letter, digit, and special character";
+    }
+    if (!confirmPassword || !confirmPassword.trim()) newErrors.confirmPassword = "Confirm password is required";
     if (password !== confirmPassword) newErrors.confirmPassword = "Passwords do not match";
+
     if (isProfessor && !institution) newErrors.institution = "Please select an institution";
 
     setErrors(newErrors);

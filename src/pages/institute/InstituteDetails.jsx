@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom"; // Import Link from react-router-dom
+import { Link } from "react-router-dom"; 
 import InstituteServices from "../../../services/InstituteServices";
 import { useParams } from "react-router-dom";
 

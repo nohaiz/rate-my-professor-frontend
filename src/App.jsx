@@ -57,9 +57,9 @@ function App() {
         {user ? (
           <>
             {user.role === "student" ? (
-              <Route path="/profile/:id" element={<StudentProfile handleSignout={handleSignout} user={user}/>} />
+              <Route path="/profile/:id" element={<StudentProfile handleSignout={handleSignout} user={user} />} />
             ) : user.role === "professor" ? (
-              <Route path="/profile/:id" element={<ProfessorProfile handleSignout={handleSignout} />} />
+              <Route path="/profile/:id" element={<ProfessorProfile handleSignout={handleSignout} user={user} />} />
             ) : (
               <Route path="/dashboard/:id" element={<AdminProfile handleSignout={handleSignout} user={user} />} />
             )}

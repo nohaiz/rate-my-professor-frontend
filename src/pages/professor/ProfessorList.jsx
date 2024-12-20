@@ -44,7 +44,7 @@ const ProfessorList = ({ user }) => {
 
       fetchBookmarkedProfessors();
     }
-  }, [user]);  // Re-run when 'user' changes, fetch initial bookmark data
+  }, [user]);  
 
   const getRatingColor = (rating) => {
     if (rating >= 4.5) return "bg-lime-400";
@@ -63,11 +63,9 @@ const ProfessorList = ({ user }) => {
       const isBookmarked = bookmarkedProfessors.some((professor) => professor._id === id);
 
       if (isBookmarked) {
-        // Remove from bookmarks
         await ProfessorServices.removeProfessorFromBookmarks(id);
         setBookmarkedProfessors((prev) => prev.filter((professor) => professor._id !== id));
       } else {
-        // Add to bookmarks
         await ProfessorServices.addProfessorToBookmarks(id);
         const updatedProfessor = professors.find((professor) => professor._id === id);
         setBookmarkedProfessors((prev) => [...prev, updatedProfessor]);

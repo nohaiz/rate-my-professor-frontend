@@ -243,8 +243,6 @@ const deleteProfessorReview = async (id, reviewId) => {
   }
 };
 
-
-
 const addProfessorComment = async (id, reviewId, comment) => {
   try {
     const url = new URL(`${BASE_URL}/professors/${id}/reviews/${reviewId}/comments`);
@@ -270,6 +268,34 @@ const addProfessorComment = async (id, reviewId, comment) => {
     console.error("Error updating review:", error);
   }
 }
+
+const updateProfessorComment = async (id, reviewId, commentId, updatedComment) => {
+  try {
+    const url = new URL(`${BASE_URL}/professors/${id}/reviews/${reviewId}/comments/${commentId}`);
+
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ comment: updatedComment }),
+    });
+
+    if (!res.ok) {
+      const errorResponse = await res.json();
+      return { status: res.status, error: errorResponse.error || `Error ${res.status}: ${res.statusText}` };
+    }
+
+    const json = await res.json();
+    return json;
+
+  } catch (error) {
+    console.error("Error updating comment:", error);
+    return { message: "Failed to update comment" };
+  }
+};
+
 const removeProfessorComment = async (id, reviewId, commentId) => {
   try {
     const url = new URL(`${BASE_URL}/professors/${id}/reviews/${reviewId}/comments/${commentId}`);
@@ -296,4 +322,4 @@ const removeProfessorComment = async (id, reviewId, commentId) => {
 
 
 
-export default { indexProfessors, getProfessor, addProfessorCourse, removeProfessorCourse, addProfessorToBookmarks, removeProfessorFromBookmarks, createProfessorReview, updateProfessorReview, deleteProfessorReview, addProfessorComment, removeProfessorComment };
+export default { indexProfessors, getProfessor, addProfessorCourse, removeProfessorCourse, addProfessorToBookmarks, removeProfessorFromBookmarks, createProfessorReview, updateProfessorReview, deleteProfessorReview, addProfessorComment, updateProfessorComment, removeProfessorComment };

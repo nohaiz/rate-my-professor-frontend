@@ -2,11 +2,14 @@ import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Searchbar from "../../components/Searchbar";
 import InstituteServices from "../../../services/InstituteServices";
+import ProfessorServices from "../../../services/ProfessorServices";
 
 const InstituteList = () => {
   const [institutes, setInstitutes] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalInstitutes, setTotalInstitutes] = useState(0);
+  const [professors, setProfessors] = useState([]);
+
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -22,6 +25,8 @@ const InstituteList = () => {
         } else {
           setInstitutes([]);
         }
+        const professor = await ProfessorServices.indexProfessors();
+        setProfessors(professor.professorsData);
       } catch (error) {
         setInstitutes([]);
       }
@@ -29,6 +34,22 @@ const InstituteList = () => {
 
     fetchInstitutes();
   }, [query, currentPage]);
+
+  const calculateInstituteRating = (institutionId) => {
+
+    const relevantProfessors = professors.filter(
+      (professor) => professor.institution._id === institutionId
+    );
+
+    if (relevantProfessors.length > 0) {
+      const totalRating = relevantProfessors.reduce((acc, professor) => acc + professor.averageRating, 0);
+      const averageRating = totalRating / relevantProfessors.length;
+
+      return averageRating;
+    } else {
+      return null;
+    }
+  };
 
   const getRatingColor = (rating) => {
     if (rating >= 4.5) return "bg-lime-400";
@@ -68,14 +89,11 @@ const InstituteList = () => {
                       <p className="text-gray-600">Quality</p>
                       <div
                         className={`text-white font-semibold py-3 px-6 rounded-xl w-20 h-20 flex items-center justify-center text-xl ${getRatingColor(
-                          Math.round(institution.averageRating)
+                          calculateInstituteRating(institution._id)
                         )}`}
                       >
-                        {Math.round(institution.averageRating)}
+                        {(calculateInstituteRating(institution._id))?.toFixed(2)}
                       </div>
-                      <p className="text-gray-500 text-sm">
-                        ({institution.reviewCount} ratings)
-                      </p>
                     </div>
                   </div>
                   <a

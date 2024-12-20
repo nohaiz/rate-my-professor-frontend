@@ -26,7 +26,7 @@ const StudentProfile = ({ handleSignout, user }) => {
       }
     };
     fetchStudentProfile();
-  }, [id]);
+  }, [id, activeTab]);
 
   const { studentAccount } = studentProfile || {};
   const { firstName, lastName, institution, fieldOfStudy, GPA } = studentAccount || {};
@@ -98,6 +98,104 @@ const StudentProfile = ({ handleSignout, user }) => {
     });
   };
 
+  const handleEditComment = (reviewId, commentId) => {
+    setStudentProfile((prevProfile) => {
+      const updatedReviews = prevProfile.studentAccount.reviews.map((review) => {
+        if (review._id === reviewId) {
+          const updatedComments = review.professorId.reviews.map((profReview) => {
+            if (profReview._id === reviewId) {
+              const updatedProfComments = profReview.comments.map((comment) => {
+                if (comment._id === commentId) {
+                  return { ...comment, isEditMode: !comment.isEditMode };
+                }
+                return comment;
+              });
+              return {
+                ...profReview,
+                comments: updatedProfComments,
+              };
+            }
+            return profReview;
+          });
+
+          return {
+            ...review,
+            professorId: {
+              ...review.professorId,
+              reviews: updatedComments,
+            },
+          };
+        }
+        return review;
+      });
+
+      return {
+        ...prevProfile,
+        studentAccount: {
+          ...prevProfile.studentAccount,
+          reviews: updatedReviews,
+        },
+      };
+    });
+  };
+
+  const handleSaveComment = async (professorId, reviewId, commentId, updatedCommentText) => {
+    if (!updatedCommentText || updatedCommentText.length > 500) {
+      setErrorMessage("Comment text is required and should be less than 500 characters.");
+      return;
+    }
+
+    try {
+      const updatedComment = { text: updatedCommentText };
+
+      await ProfessorServices.updateProfessorComment(professorId, reviewId, commentId, updatedComment);
+
+      setStudentProfile((prevProfile) => {
+        const updatedReviews = prevProfile.studentAccount.reviews.map((review) => {
+          if (review._id === reviewId) {
+            const updatedComments = review.professorId.reviews.map((profReview) => {
+              if (profReview._id === reviewId) {
+                const updatedProfComments = profReview.comments.map((comment) => {
+                  if (comment._id === commentId) {
+                    return { ...comment, text: updatedCommentText, isEditMode: false };
+                  }
+                  return comment;
+                });
+                return {
+                  ...profReview,
+                  comments: updatedProfComments,
+                };
+              }
+              return profReview;
+            });
+
+            return {
+              ...review,
+              professorId: {
+                ...review.professorId,
+                reviews: updatedComments,
+              },
+            };
+          }
+          return review;
+        });
+
+        return {
+          ...prevProfile,
+          studentAccount: {
+            ...prevProfile.studentAccount,
+            reviews: updatedReviews,
+          },
+        };
+      });
+    } catch (error) {
+      console.error("Error updating comment:", error);
+      setErrorMessage("Failed to update comment.");
+    }
+  };
+
+
+
   const handleSaveReview = async (reviewId, professorId, updatedReviewText, updatedRating) => {
     setErrorMessage("");
     if (!updatedReviewText || updatedReviewText.length > 500) {
@@ -130,7 +228,6 @@ const StudentProfile = ({ handleSignout, user }) => {
       });
     } catch (error) {
       console.error("Error updating review:", error);
-      alert("Error updating review");
     }
   };
 
@@ -153,36 +250,49 @@ const StudentProfile = ({ handleSignout, user }) => {
   };
 
   const handleDeleteComment = async (professorId, reviewId, commentId) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this comment?");
-    if (confirmDelete) {
-      try {
-        const response = await ProfessorServices.removeProfessorComment(professorId, reviewId, commentId);
+    try {
+      const response = await ProfessorServices.removeProfessorComment(professorId, reviewId, commentId);
 
-        setSuccessMessage("Comment deleted successfully!");
-        setTimeout(() => {
-          setSuccessMessage("");
-        }, 3000);
+      setSuccessMessage("Comment deleted successfully!");
+      setTimeout(() => {
+        setSuccessMessage("");
+      }, 3000);
 
-        setStudentProfile((prevProfile) => {
-          const updatedReviews = prevProfile.studentAccount.reviews.map((review) => {
-            if (review._id === reviewId) {
-              const updatedComments = review.comments.filter((comment) => comment._id !== commentId);
-              return { ...review, comments: updatedComments };
-            }
-            return review;
-          });
+      setStudentProfile((prevProfile) => {
+        const updatedReviews = prevProfile.studentAccount.reviews.map((review) => {
+          if (review._id === reviewId) {
+            const updatedComments = review.professorId.reviews.map((singleReview) => {
+              if (singleReview._id === review._id) {
+                return {
+                  ...singleReview,
+                  comments: singleReview.comments.filter(comment => comment._id !== commentId)
+                };
+              }
+              return singleReview;
+            });
 
-          return {
-            ...prevProfile,
-            studentAccount: {
-              ...prevProfile.studentAccount,
-              reviews: updatedReviews,
-            },
-          };
+            return {
+              ...review,
+              professorId: {
+                ...review.professorId,
+                reviews: updatedComments,
+              },
+            };
+          }
+          return review;
         });
-      } catch (error) {
-        console.error("Error deleting comment:", error);
-      }
+
+        return {
+          ...prevProfile,
+          studentAccount: {
+            ...prevProfile.studentAccount,
+            reviews: updatedReviews,
+          },
+        };
+      });
+
+    } catch (error) {
+      console.error("Error deleting comment:", error);
     }
   };
 
@@ -285,12 +395,12 @@ const StudentProfile = ({ handleSignout, user }) => {
           {activeTab === "ratings" && (
             <section className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Student Reviews</h3>
-                {successMessage && (
-                  <div className="text-green-400 text-sm font-medium ml-4 flex justify-center items-center">
-                    {successMessage}
-                  </div>
-                )}
+                <h3 className="text-lg font-semibold text-gray-900 flex">Student Reviews
+                  {!successMessage && (
+                    <div className="text-green-400 text-sm font-medium ml-4 flex justify-center items-center">
+                      {successMessage}
+                    </div>
+                  )}</h3>
                 <p className="mt-1 max-w-2xl text-sm text-gray-500">Below are all the reviews you have written.</p>
               </div>
 
@@ -306,7 +416,7 @@ const StudentProfile = ({ handleSignout, user }) => {
                           onClick={() => handleEditReview(review._id)}
                           className="flex items-center text-sm text-gray-900 hover:text-indigo-600 focus:outline-none"
                         >
-                          <AiOutlineEdit className="mr-4" />
+                          Edit Review <AiOutlineEdit className="mr-4" />
                         </button>
                         <button
                           onClick={() => handleDeleteReview(review.professorId._id, review._id)}
@@ -370,16 +480,40 @@ const StudentProfile = ({ handleSignout, user }) => {
                                     singleReview.comments
                                       .filter((comment) => comment.userId === user.Id)
                                       .map((comment) => (
-                                        <div key={comment._id} className="mt-4 flex">
-                                          <div className="text-sm text-gray-700">
-                                            {comment.text}
-                                          </div>
-                                          <button
-                                            onClick={() => handleDeleteComment(review.professorId._id, review._id, comment._id)}
-                                            className="ml-2 text-red-600 text-sm hover:text-red-800"
-                                          >
-                                            <AiOutlineDelete className="mr-2" />
-                                          </button>
+                                        <div key={comment._id} className="mt-4">
+                                          {comment.isEditMode ? (
+                                            <form onSubmit={(e) => {
+                                              e.preventDefault();
+                                              handleSaveComment(review.professorId._id, review._id, comment._id, e.target.text.value);
+                                            }}>
+                                              <textarea
+                                                name="text"
+                                                defaultValue={comment.text}
+                                                className="text-sm text-gray-700 sm:col-span-2 border border-gray-300 rounded-md p-2 w-3/4 h-32"
+                                              />
+                                              <button type="submit" className="mt-4 px-6 py-2 bg-indigo-500 text-white rounded-full flex ml-auto">Save</button>
+                                            </form>
+                                          ) : (
+                                            <>
+                                              <div className="text-sm text-gray-700">
+                                                {comment.text}
+                                                <div className="flex mt-2">
+                                                  <button
+                                                    onClick={() => handleEditComment(review._id, comment._id)}
+                                                    className="ml-2 flex items-center text-xs text-gray-900 hover:text-indigo-600 focus:outline-none"
+                                                  >
+                                                    Edit <AiOutlineEdit className="mr-1" />
+                                                  </button>
+                                                  <button
+                                                    onClick={() => handleDeleteComment(review.professorId._id, review._id, comment._id)}
+                                                    className="ml-2 flex items-center text-red-600 text-xs hover:text-red-800"
+                                                  >
+                                                    Delete<AiOutlineDelete className="mr-1" />
+                                                  </button>
+                                                </div>
+                                              </div>
+                                            </>
+                                          )}
                                         </div>
                                       ))
                                   ) : (

@@ -6,14 +6,18 @@ import ProfileService from "../../../../services/ProfileService";
 import ProfessorProfileForm from "./ProfessorProfileForm";
 import ProfessorServices from "../../../../services/ProfessorServices";
 import SaveProfessors from "../../../components/SavedProfessors";
+import CourseServices from "../../../../services/CourseServices";
 
-const ProfessorProfile = ({ handleSignout }) => {
+const ProfessorProfile = ({ handleSignout, user }) => {
   const { id } = useParams();
   const [professorProfile, setProfessorProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
   const [courses, setCourses] = useState([]);
-  const [unassignedCourses, setUnassignedCourses] = useState([]);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [courseWithNoDept, setCourseWithNoDept] = useState([])
+  const [errorMessage, setErrorMessage] = useState("");
+
   const navigate = useNavigate();
 
   const fetchProfessorProfile = async () => {
@@ -27,6 +31,8 @@ const ProfessorProfile = ({ handleSignout }) => {
         );
         setCourses(allCourses);
       }
+      const courseWithNoDep = await CourseServices.indexCourses();
+      setCourseWithNoDept(courseWithNoDep.courses)
     } catch (error) {
       console.error("Error fetching professor profile:", error);
     }
@@ -34,7 +40,7 @@ const ProfessorProfile = ({ handleSignout }) => {
 
   useEffect(() => {
     fetchProfessorProfile();
-  }, [id]);
+  }, [id, isEditing]);
 
   const { professorAccount } = professorProfile || {};
   const { firstName, lastName, institution, bio } = professorAccount || {};
@@ -78,6 +84,127 @@ const ProfessorProfile = ({ handleSignout }) => {
         console.error("Error deleting profile:", error);
         alert("There was an error deleting the profile.");
       }
+    }
+  };
+
+  const handleEditComment = (reviewId, commentId) => {
+    setProfessorProfile((prevProfile) => {
+      const updatedReviews = prevProfile?.professorAccount?.reviews?.map((review) => {
+        if (review._id !== reviewId) return review;
+
+        const updatedComments = review?.comments?.map((comment) => {
+          if (comment._id === commentId) {
+            return { ...comment, isEditMode: !comment.isEditMode };
+          }
+          return comment;
+        });
+
+        return { ...review, comments: updatedComments };
+      });
+
+      return {
+        ...prevProfile,
+        professorAccount: {
+          ...prevProfile.professorAccount,
+          reviews: updatedReviews || []
+        },
+      };
+    });
+  };
+
+  const handleSaveComment = async (reviewId, commentId, updatedCommentText) => {
+    if (!updatedCommentText || updatedCommentText.length > 500) {
+      setErrorMessage("Comment text is required and should be less than 500 characters.");
+      return;
+    }
+
+    try {
+      const updatedReviews = professorProfile?.professorAccount?.reviews?.map((review) => {
+        if (review._id === reviewId) {
+          const updatedComments = review.comments.map((comment) =>
+            comment._id === commentId ? { ...comment, text: updatedCommentText, isEditMode: false } : comment
+          );
+          return { ...review, comments: updatedComments };
+        }
+        return review;
+      });
+
+      setProfessorProfile((prevProfile) => ({
+        ...prevProfile,
+        professorAccount: { ...prevProfile.professorAccount, reviews: updatedReviews },
+      }));
+
+      const professorId = professorProfile?.professorAccount?._id;
+
+      if (professorId) {
+        await ProfessorServices.updateProfessorComment(professorId, reviewId, commentId, { text: updatedCommentText });
+      } else {
+        setErrorMessage("Failed to find professorId for the review.");
+      }
+
+    } catch (error) {
+      setErrorMessage("Failed to update comment.");
+      console.error(error);
+    }
+  };
+
+  const toggleComments = (reviewId) => {
+    setProfessorProfile((prevProfile) => {
+
+      const updatedReviews = prevProfile.professorAccount.reviews.map((review) => {
+        if (review._id === reviewId) {
+          return { ...review, showComments: !review.showComments };
+        }
+        return review;
+      });
+      const updatedProfile = {
+        ...prevProfile,
+        professorAccount: {
+          ...prevProfile.professorAccount,
+          reviews: updatedReviews,
+        },
+      };
+      return updatedProfile;
+    });
+  };
+
+
+  const handleDeleteComment = async (reviewId, commentId) => {
+    try {
+      setSuccessMessage("Comment deleted successfully!");
+      setTimeout(() => {
+        setSuccessMessage("");
+      }, 3000);
+
+      setProfessorProfile((prevProfile) => {
+        const updatedReviews = prevProfile.professorAccount.reviews.map((review) => {
+          if (review._id === reviewId) {
+            const updatedComments = review.comments.filter(comment => comment._id !== commentId);
+
+            return {
+              ...review,
+              comments: updatedComments,
+            };
+          }
+          return review;
+        });
+
+        return {
+          ...prevProfile,
+          professorAccount: {
+            ...prevProfile.professorAccount,
+            reviews: updatedReviews,
+          },
+        };
+      });
+
+      const professorId = professorProfile?.professorAccount?._id;
+      if (professorId) {
+        await ProfessorServices.removeProfessorComment(professorId, reviewId, commentId);
+      }
+
+    } catch (error) {
+      console.error("Error deleting comment:", error);
     }
   };
 
@@ -202,6 +329,41 @@ const ProfessorProfile = ({ handleSignout }) => {
                         )}
                       </div>
                     </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 mt-4">
+                      <div className="text-sm font-medium text-gray-900"></div>
+                      <div className="text-sm text-gray-700 sm:col-span-2">
+                        {courseWithNoDept
+                          .filter((course) => {
+                            return !courses.some((assignedCourse) => assignedCourse._id === course._id);
+                          })
+                          .map((course, indx) => {
+                            if (course.professors.some(professor => professor._id === professorProfile.professorAccount._id)) {
+                              return (
+                                <>
+                                  <div className="font-medium">
+                                    Unassigned Department
+                                  </div>
+                                  <div className="text-sm text-gray-600 mb-2 mt-2">
+                                    <div className="flex items-center space-x-2">
+                                      <div key={indx} className="text-sm text-gray-600">
+                                        {course.title} ({course.code})
+                                      </div>
+                                      <button
+                                        onClick={() => handleRemoveCourse(course._id)}
+                                        className="text-red-600 hover:text-red-800"
+                                      >
+                                        <AiOutlineDelete />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </>
+                              );
+                            }
+                            return null;
+                          })}
+                      </div>
+                    </div>
+
 
                     <div className="py-3 sm:grid sm:grid-cols-3 sm:px-0 mt-1">
                       <dt className="text-sm font-medium text-gray-900">Biography</dt>
@@ -228,11 +390,101 @@ const ProfessorProfile = ({ handleSignout }) => {
 
           {activeTab === "ratings" && (
             <section className="space-y-6">
-              <h3 className="text-base font-semibold text-gray-900">Reviews</h3>
-              {professorProfile.reviews?.length ? (
-                professorProfile.reviews.map((review, idx) => (
-                  <div key={idx} className="border-t border-gray-200 pt-4">
-                    <p className="text-sm text-gray-700">{review}</p>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 flex">Professor Reviews
+                  {!successMessage && (
+                    <div className="text-green-400 text-sm font-medium ml-4 flex justify-center items-center">
+                      {successMessage}
+                    </div>
+                  )}</h3>
+                <p className="mt-1 max-w-2xl text-sm text-gray-500">Below are all the reviews about you, along with the comments you have added.</p>
+              </div>
+              {professorProfile.professorAccount.reviews && professorProfile.professorAccount.reviews.length > 0 ? (
+                professorProfile.professorAccount.reviews.map((review) => (
+                  <div key={review._id}>
+                    <div className="flex items-baseline justify-between">
+                      <div className="text-sm font-semibold text-gray-900 mt-2">
+                        <p>Feedback Provided By: {review.studentId.firstName} {review.studentId.lastName}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 mt-4">
+                      <div className="text-sm font-medium text-gray-900">Course</div>
+                      <div className="text-sm text-gray-700 sm:col-span-2">{review.courseId.title}</div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 mt-4">
+                      <div className="text-sm font-medium text-gray-900">Code</div>
+                      <div className="text-sm text-gray-700 sm:col-span-2">({review.courseId.code})</div>
+                    </div>
+                    <>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 mt-4">
+                        <div className="text-sm font-medium text-gray-900">Rating</div>
+                        <div className="text-sm text-gray-700 sm:col-span-2 ">{review.rating}</div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 mt-4 border-b border-gray-900 pb-5">
+                        <div className="text-sm font-medium text-gray-900">Review</div>
+                        <div className="text-sm text-gray-700 sm:col-span-2 w-3/4">{review.text}
+                          <button
+                            onClick={() => toggleComments(review._id)}
+                            className="text-xs text-indigo-600 flex mt-2"
+                          >
+                            {review.showComments ? "Hide Comments" : "Show Comments"}
+                          </button>
+
+                          <div className={review.showComments ? "ml-2 mt-3" : ""}>
+                            {review.showComments && review.comments && review.comments.length > 0 ? (
+                              <div className="ml-2 mt-3">
+                                {review.comments
+                                  .filter((comment) => comment.userId === user.Id)
+                                  .map((comment) => (
+                                    <div key={comment._id} className="mt-4">
+                                      {comment.isEditMode ? (
+                                        <form
+                                          onSubmit={(e) => {
+                                            e.preventDefault();
+                                            handleSaveComment(review._id, comment._id, e.target.text.value);
+                                          }}
+                                        >
+                                          <textarea
+                                            name="text"
+                                            defaultValue={comment.text}
+                                            className="text-sm text-gray-700 sm:col-span-2 border border-gray-300 rounded-md p-2 w-3/4 h-32"
+                                          />
+                                          <button type="submit" className="mt-4 px-6 py-2 bg-indigo-500 text-white rounded-full flex ml-auto">
+                                            Save
+                                          </button>
+                                        </form>
+                                      ) : (
+                                        <>
+                                          <div className="text-sm text-gray-700">
+                                            {comment.text}
+                                            <div className="flex mt-2">
+                                              <button
+                                                onClick={() => handleEditComment(review._id, comment._id)}
+                                                className="ml-2 flex items-center text-xs text-gray-900 hover:text-indigo-600 focus:outline-none"
+                                              >
+                                                Edit <AiOutlineEdit className="mr-1" />
+                                              </button>
+                                              <button
+                                                onClick={() => handleDeleteComment(review._id, comment._id)}
+                                                className="ml-2 flex items-center text-red-600 text-xs hover:text-red-800"
+                                              >
+                                                Delete <AiOutlineDelete className="mr-1" />
+                                              </button>
+                                            </div>
+                                          </div>
+                                        </>
+                                      )}
+                                    </div>
+                                  ))}
+                              </div>
+                            ) :
+                              <></>
+                            }
+                          </div>
+
+                        </div>
+                      </div>
+                    </>
                   </div>
                 ))
               ) : (
@@ -241,8 +493,9 @@ const ProfessorProfile = ({ handleSignout }) => {
             </section>
           )}
         </>
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 };
 
