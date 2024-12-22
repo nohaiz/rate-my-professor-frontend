@@ -22,67 +22,88 @@ const createReviewReport = async (professorId, reviewId, reportReason, category)
   }
 };
 
-const getReviewReport = async (id) => {
-  try {
-    const response = await fetch(`/review/${id}`, {
-      method: "GET",
-      headers: {
-        "Authorization": `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
-    if (response.ok) {
-      const data = await response.json();
-    } else {
-      const error = await response.json();
-      console.error('Error:', error);
-    }
-  } catch (error) {
-    console.error('Network Error:', error);
-  }
-};
+const getAllReviewReports = async (page, limit) => {
 
-const getAllReviewReports = async () => {
   try {
-    const response = await fetch('/review', {
+
+    const url = new URL(`${BASE_URL}/reports/review/`);
+    const params = { page, limit };
+    Object.keys(params).forEach(key => {
+      if (params[key]) url.searchParams.append(key, params[key]);
+    });
+    const res = await fetch(url, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${localStorage.getItem("token")}`,
       },
     });
-    if (response.ok) {
-      const data = await response.json();
-    } else {
-      const error = await response.json();
-      console.error('Error:', error);
+    if (!res.ok) {
+      const errorResponse = await res.json();
+      return { status: res.status, error: errorResponse.error || `Error ${res.status}: ${res.statusText}` };
     }
+
+    const json = await res.json();
+    return json;
+
   } catch (error) {
     console.error('Network Error:', error);
+    return { reports: [], totalReports: 0, currentPage: 1 };
+
   }
 };
 
 const deleteReviewReport = async (id) => {
   try {
-    const response = await fetch(`/review/${id}`, {
+    const res = await fetch(`${BASE_URL}/reports/${id}`, {
       method: 'DELETE',
       headers: {
         "Authorization": `Bearer ${localStorage.getItem("token")}`,
       },
     });
 
-    if (response.ok) {
-      const result = await response.json();
-    } else {
-      const error = await response.json();
-      console.error('Error:', error);
+    if (!res.ok) {
+      const errorResponse = await res.json();
+      return { status: res.status, error: errorResponse.error || `Error ${res.status}: ${res.statusText}` };
     }
+
+    const json = await res.json();
+    return json;
+
   } catch (error) {
     console.error('Network Error:', error);
   }
 };
 
+const updateReviewReport = async (reportId, reportData) => {
+
+  try {
+    const res = await fetch(`${BASE_URL}/reports/${reportId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        "Authorization": `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify(reportData),
+    });
+
+    if (!res.ok) {
+      const errorResponse = await res.json();
+      return { status: res.status, error: errorResponse.error || `Error ${res.status}: ${res.statusText}` };
+    }
+
+    const json = await res.json();
+    return json;
+
+
+  } catch (error) {
+    console.error('Network Error:', error);
+  }
+};
+
+
 export default {
   createReviewReport,
-  getReviewReport,
   getAllReviewReports,
   deleteReviewReport,
+  updateReviewReport,
 };

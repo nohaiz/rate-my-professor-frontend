@@ -16,15 +16,11 @@ const indexProfessors = async (page, limit, name = '') => {
     });
 
     if (!res.ok) {
-      throw new Error(`Request failed with status ${res.status}`);
+      const errorResponse = await res.json();
+      return { status: res.status, error: errorResponse.error || `Error ${res.status}: ${res.statusText}` };
     }
 
     const json = await res.json();
-
-    if (json.error) {
-      throw new Error(json.error);
-    }
-
     return json;
 
   } catch (error) {

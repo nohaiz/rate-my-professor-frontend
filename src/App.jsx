@@ -40,8 +40,8 @@ function App() {
       <Navbar user={user} handleSignout={handleSignout} />
       <Routes>
         {/* PUBLIC ROUTES */}
-        <Route path='/' element={<Home />} />
-        <Route path='/institutes' element={<Institute />}></Route>
+        <Route path='/' element={<Home user={user}/>} />
+        <Route path='/institutes' element={<Institute user={user}/>}></Route>
         <Route path='/professors' element={<Professor user={user} />}></Route>
         <Route path='/institutions/:id' element={<InstituteDetails />}></Route>
         <Route path="/professors/:id" element={<ProfessorDetails user={user} />} >

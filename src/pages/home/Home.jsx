@@ -1,6 +1,6 @@
 import Searchbar from "../../components/Searchbar";
 
-const Home = () => {
+const Home = ({ user }) => {
   return (
     <>
       <main>
@@ -9,7 +9,7 @@ const Home = () => {
             <h1 className="text-4xl sm:text-6xl font-semibold text-gray-900 leading-tight mb-6 p-6 rounded-3xl bg-indigo-100 shadow-lg">
               Find Top Institutes & Professors
             </h1>
-            <Searchbar />
+            <Searchbar user={user} />
           </div>
         </section>
 

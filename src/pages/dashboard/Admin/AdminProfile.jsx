@@ -7,6 +7,7 @@ import AdminProfileForm from "./AdminProfileForm";
 
 import ManageUsers from "./ManageUsers";
 import ManageAcademics from "./ManageAcademics";
+import ManageReports from "./ManageReports";
 
 const AdminProfile = ({ handleSignout, user }) => {
   const { id } = useParams();
@@ -148,7 +149,7 @@ const AdminProfile = ({ handleSignout, user }) => {
           )}
           {activeTab === 'reporting' && (
             <section className="space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900">Reporting & Moderation</h3>
+              <ManageReports />
             </section>
           )}
         </>

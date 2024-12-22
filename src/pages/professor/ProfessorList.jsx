@@ -10,6 +10,7 @@ const ProfessorList = ({ user }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalProfessors, setTotalProfessors] = useState(0);
   const [bookmarkedProfessors, setBookmarkedProfessors] = useState([]);
+  const [errorMessage, setErrorMessage] = useState("")
   const query = new URLSearchParams(window.location.search).get("name");
 
   useEffect(() => {
@@ -20,7 +21,7 @@ const ProfessorList = ({ user }) => {
           setProfessors(response.professorsData);
           setTotalProfessors(response.totalProfessors);
         } else {
-          setProfessors([]);
+          setErrorMessage('Sorry, there are no results available.')
         }
       } catch (error) {
         setProfessors([]);
@@ -44,7 +45,7 @@ const ProfessorList = ({ user }) => {
 
       fetchBookmarkedProfessors();
     }
-  }, [user]);  
+  }, [user]);
 
   const getRatingColor = (rating) => {
     if (rating >= 4.5) return "bg-lime-400";
@@ -79,96 +80,104 @@ const ProfessorList = ({ user }) => {
 
   return (
     <div className="py-10">
-      <Searchbar submittedSearch={query} />
-      <div className="max-w-8x1 mx-auto px-6 mt-8">
-        <div className="space-y-8">
-          {professors.length > 0 ? (
-            professors.map((professor) => (
-              <div
-                key={professor._id}
-                className="rounded-3xl bg-indigo-100 shadow-lg overflow-hidden p-5 hover:shadow-xl transition-all duration-300 max-w-3xl mx-auto"
-              >
-                <div className="flex justify-end">
-                  {user ? (
-                    <button onClick={() => handleBookmark(professor._id)}>
-                      {bookmarkedProfessors.some((professorObj) => professorObj._id === professor._id) ? (
-                        <AiFillHeart className="text-red-500 text-xl" />
-                      ) : (
-                        <AiOutlineHeart className="text-gray-400 text-xl" />
-                      )}
-                    </button>
-                  ) : null}
-                </div>
+      <Searchbar setErrorMessage={setErrorMessage} user={user} />
+      {!errorMessage ?
+        <>
+          <div className="max-w-8x1 mx-auto px-6 mt-8">
+            <div className="space-y-8">
+              {professors.length > 0 ? (
+                professors.map((professor) => (
+                  <div
+                    key={professor._id}
+                    className="rounded-3xl bg-indigo-100 shadow-lg overflow-hidden p-5 hover:shadow-xl transition-all duration-300 max-w-3xl mx-auto"
+                  >
+                    <div className="flex justify-end">
+                      {user?.role === 'student' || user?.role === 'professor' ? (
+                        <button onClick={() => handleBookmark(professor._id)}>
+                          {bookmarkedProfessors.some((professorObj) => professorObj._id === professor._id) ? (
+                            <AiFillHeart className="text-red-500 text-xl" />
+                          ) : (
+                            <AiOutlineHeart className="text-gray-400 text-xl" />
+                          )}
+                        </button>
+                      ) : null}
+                    </div>
 
-                <div className="space-y-1">
-                  <div className="flex items-center justify-first">
-                    <div className="flex flex-col items-center justify-center space-y-1 text-center">
-                      <p className="text-gray-600">Quality</p>
-                      <div
-                        className={`text-white font-semibold py-3 px-6 rounded-xl w-20 h-20 flex items-center justify-center text-xl ${getRatingColor(
-                          (professor.averageRating)?.toFixed(2)
-                        )}`}
-                      >
-                        {(professor.averageRating)?.toFixed(2)}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-first">
+                        <div className="flex flex-col items-center justify-center space-y-1 text-center">
+                          <p className="text-gray-600">Quality</p>
+                          <div
+                            className={`text-white font-semibold py-3 px-6 rounded-xl w-20 h-20 flex items-center justify-center text-xl ${getRatingColor(
+                              (professor.averageRating)?.toFixed(2)
+                            )}`}
+                          >
+                            {(professor.averageRating)?.toFixed(2)}
+                          </div>
+                          <p className="text-gray-500 text-sm">({professor.reviewCount} ratings count)</p>
+                        </div>
+                        <div className="flex flex-col justify-center space-y-1 ml-5 mt-3">
+                          <h3 className="text-lg font-bold text-gray-900">
+                            {professor.firstName} {professor.lastName}
+                          </h3>
+                          <p className="text-gray-900 font-bold text-s">
+                            {professor.institution ? professor.institution.name : "Unknown University"}
+                          </p>
+                          <p className="text-gray-900">
+                            {professor.department && professor.department.length > 0
+                              ? professor.department.map((department, index) => (
+                                <p key={index} className="">{department.name || "Unknown Department"}</p>
+                              ))
+                              : <p>Unknown Department</p>}
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-gray-500 text-sm">({professor.reviewCount} ratings count)</p>
-                    </div>
-                    <div className="flex flex-col justify-center space-y-1 ml-5 mt-3">
-                      <h3 className="text-lg font-bold text-gray-900">
-                        {professor.firstName} {professor.lastName}
-                      </h3>
-                      <p className="text-gray-900 font-bold text-s">
-                        {professor.institution ? professor.institution.name : "Unknown University"}
-                      </p>
-                      <p className="text-gray-900">
-                        {professor.department && professor.department.length > 0
-                          ? professor.department.map((department, index) => (
-                            <p key={index} className="">{department.name || "Unknown Department"}</p>
-                          ))
-                          : <p>Unknown Department</p>}
-                      </p>
+                      <div className="flex justify-between items-center">
+                        <a
+                          href={`/professors/${professor._id}`}
+                          className="text-indigo-600 bg-indigo-500 text-white text-sm font-medium rounded-full py-2 px-8 hover:bg-indigo-600 ml-auto"
+                        >
+                          View Details
+                        </a>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <a
-                      href={`/professors/${professor._id}`}
-                      className="text-indigo-600 bg-indigo-500 text-white text-sm font-medium rounded-full py-2 px-8 hover:bg-indigo-600 ml-auto"
-                    >
-                      View Details
-                    </a>
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <></>
-          )}
+                ))
+              ) : (
+                <></>
+              )}
 
-          {totalPages > 1 && (
-            <div className="flex justify-center mt-8">
-              <nav aria-label="Page navigation" className="inline-flex items-center space-x-2">
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="bg-indigo-500 text-white text-sm font-medium rounded-full py-2 px-6 hover:bg-indigo-600 disabled:bg-gray-400 text-gray-500"
-                >
-                  Prev
-                </button>
-                <span className="px-4 py-2 text-gray-700">
-                  Page {currentPage} of {totalPages}
-                </span>
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="bg-indigo-500 text-white text-sm font-medium rounded-full py-2 px-6 hover:bg-indigo-600 disabled:bg-gray-400 text-gray-500"
-                >
-                  Next
-                </button>
-              </nav>
+              {totalPages > 1 && (
+                <div className="flex justify-center mt-8">
+                  <nav aria-label="Page navigation" className="inline-flex items-center space-x-2">
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="bg-indigo-500 text-white text-sm font-medium rounded-full py-2 px-6 hover:bg-indigo-600 disabled:bg-gray-400 text-gray-500"
+                    >
+                      Prev
+                    </button>
+                    <span className="px-4 py-2 text-gray-700">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="bg-indigo-500 text-white text-sm font-medium rounded-full py-2 px-6 hover:bg-indigo-600 disabled:bg-gray-400 text-gray-500"
+                    >
+                      Next
+                    </button>
+                  </nav>
+                </div>
+              )}
             </div>
-          )}
+          </div>
+        </>
+        :
+        <div className="flex items-center justify-center mt-4 text-sm text-red-500">
+          {errorMessage}
         </div>
-      </div>
+      }
     </div>
   );
 };
