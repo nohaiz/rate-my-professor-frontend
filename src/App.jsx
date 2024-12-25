@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Route, Routes, useNavigate } from 'react-router-dom';
 
 import './App.css'
@@ -21,12 +21,18 @@ import ProfessorReviewForm from './pages/professor/ProfessorReviewForm';
 
 import InstituteDetails from './pages/institute/InstituteDetails';
 
+import Notification from './pages/notifications/Notifications';
+
 //  SERVICES
 import AuthServices from '../services/AuthServices'
+import NotificationService from "../services/NotificationService";
+
 
 function App() {
 
   const [user, setUser] = useState(AuthServices.getUser());
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(null)
   const navigate = useNavigate();
 
   const handleSignout = () => {
@@ -35,13 +41,31 @@ function App() {
     navigate('/')
   };
 
+  const fetchNotifications = async () => {
+    const response = await NotificationService.getUserNotifications(user.Id);
+    console.log(response)
+    setUnreadCount(response.length > 0 ? response.notifications.filter(notification => !notification.isRead).length : '');
+    if (response.notifications) {
+      setNotifications(response.notifications);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchNotifications();
+      const intervalId = setInterval(fetchNotifications, 10000);
+
+      return () => clearInterval(intervalId);
+    }
+  }, [user]);
+
   return (
     <>
-      <Navbar user={user} handleSignout={handleSignout} />
+      <Navbar user={user} handleSignout={handleSignout} unreadCount={unreadCount} />
       <Routes>
         {/* PUBLIC ROUTES */}
-        <Route path='/' element={<Home user={user}/>} />
-        <Route path='/institutes' element={<Institute user={user}/>}></Route>
+        <Route path='/' element={<Home user={user} />} />
+        <Route path='/institutes' element={<Institute user={user} />}></Route>
         <Route path='/professors' element={<Professor user={user} />}></Route>
         <Route path='/institutions/:id' element={<InstituteDetails />}></Route>
         <Route path="/professors/:id" element={<ProfessorDetails user={user} />} >
@@ -63,6 +87,7 @@ function App() {
             ) : (
               <Route path="/dashboard/:id" element={<AdminProfile handleSignout={handleSignout} user={user} />} />
             )}
+            <Route path='notifications' element={<Notification user={user} setUnreadCount={setUnreadCount} fetchNotifications={fetchNotifications} notifications={notifications} setNotifications={setNotifications} />} />
           </>
         ) : (
           <></>

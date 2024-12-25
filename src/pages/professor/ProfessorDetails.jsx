@@ -4,6 +4,7 @@ import { AiOutlineFlag } from 'react-icons/ai';
 
 import ReportServices from "../../../services/ReportServices";
 import ProfessorServices from "../../../services/ProfessorServices";
+import ProfileService from "../../../services/ProfileService";
 
 const ProfessorDetails = ({ user }) => {
   const { id } = useParams();
@@ -12,6 +13,7 @@ const ProfessorDetails = ({ user }) => {
   const navigate = useNavigate();
 
   const [professor, setProfessor] = useState({});
+  const [userProfile, setUserProfile] = useState()
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState("");
 
@@ -31,6 +33,8 @@ const ProfessorDetails = ({ user }) => {
   useEffect(() => {
     const fetchProfessor = async () => {
       const response = await ProfessorServices.getProfessor(id);
+      const userProfile = await ProfileService.getProfile(user.Id)
+      setUserProfile(userProfile?.studentAccount ? userProfile.studentAccount._id : '')
       if (response) {
         setProfessor(response.professor);
         setCourses(response.course);
@@ -311,16 +315,17 @@ const ProfessorDetails = ({ user }) => {
                     </div>
                   </div >
                   <div className="flex justify-between items-center space-x-2">
-                    {user ?
+                    {user && (user?.role === 'student' || user?.role === 'professor') && (
                       <button
                         onClick={() => handleReport(professor._id, review._id)}
-                        className="flex items-center hover:text-red-600 focus:outline-none"
+                        className={`flex items-center focus:outline-none ${review.studentId._id.toString() === userProfile ? 'cursor-not-allowed opacity-50' : 'hover:text-red-600'
+                          }`}
+                        disabled={review.studentId._id.toString() === userProfile}
                       >
                         <span className="text-sm mr-1">Report</span>
                         <AiOutlineFlag />
                       </button>
-                      :
-                      <></>}
+                    )}
 
                     <p className="text-gray-600 text-sm font-semibold">{new Date(review.courseId.createdAt).toLocaleDateString()}</p>
                   </div>

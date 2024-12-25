@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 
-const Navbar = ({ user, handleSignout }) => {
+const Navbar = ({ user, handleSignout, unreadCount }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isGuest = !user;
@@ -70,7 +70,22 @@ const Navbar = ({ user, handleSignout }) => {
             </Link>
           )}
 
-          {/* Render Dashboard link for admin */}
+          {user && (user?.role === "professor" || user?.role === "student") && (
+            <Link
+              to="/notifications"
+              className="text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
+            >
+              <div className="flex space-x-1">
+                <span>Notifications</span>
+                {unreadCount > 0 && (
+                  <span className="inline-block bg-red-500 text-white rounded-full px-2 py-1 text-xs">
+                    {unreadCount}
+                  </span>
+                )}
+              </div>
+            </Link>
+          )}
+
           {user && user?.role === "admin" && (
             <Link
               to={`/dashboard/${user.Id}`}
@@ -82,7 +97,6 @@ const Navbar = ({ user, handleSignout }) => {
         </div>
 
         <div className="hidden lg:flex lg:flex-1 lg:justify-end space-x-4">
-          {/* Render Sign In/Sign Up for guests, and Sign Out for authenticated users */}
           {user ? (
             <button
               onClick={handleSignout}
@@ -114,7 +128,6 @@ const Navbar = ({ user, handleSignout }) => {
         id="mobile-menu"
       >
         <div className="space-y-1 px-2 pt-2 pb-3 sm:px-3">
-          {/* Render Institution and Professor links for students, professors, and guests */}
           {(user?.role === "professor" || user?.role === "student" || isGuest) && (
             <>
               <Link
@@ -132,7 +145,6 @@ const Navbar = ({ user, handleSignout }) => {
             </>
           )}
 
-          {/* Render Profile link for professors and students */}
           {user && (user?.role === "professor" || user?.role === "student") && (
             <Link
               to={`/profile/${user.Id}`}
@@ -142,7 +154,20 @@ const Navbar = ({ user, handleSignout }) => {
             </Link>
           )}
 
-          {/* Render Dashboard link for admin */}
+          {user && (user?.role === "professor" || user?.role === "student") && (
+            <Link
+              to="/notifications"
+              className="text-base font-semibold text-gray-900 hover:text-indigo-300 transition-colors duration-200"
+            >
+              Notifications
+              {unreadCount > 0 && (
+                <span className="absolute top-0 right-0 inline-flex items-center justify-center h-6 w-6 rounded-full bg-red-500 text-white text-xs">
+                  {unreadCount}
+                </span>
+              )}
+            </Link>
+          )}
+
           {user && user?.role === "admin" && (
             <Link
               to={`/dashboard/${user.Id}`}
@@ -154,7 +179,6 @@ const Navbar = ({ user, handleSignout }) => {
         </div>
 
         <div className="space-y-1 px-2 pt-2 pb-3 sm:px-3 border-t border-gray-200">
-          {/* Render Sign In/Sign Up for guests, and Sign Out for authenticated users */}
           {user ? (
             <button
               onClick={handleSignout}
