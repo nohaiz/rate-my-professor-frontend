@@ -161,6 +161,32 @@ const removeProfessorFromBookmarks = async (id) => {
   }
 };
 
+const getProfessorReviews = async (userId) => {
+  try {
+    const url = new URL(`${BASE_URL}/admin/users/${userId}/reviews`);
+
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    if (!res.ok) {
+      const errorResponse = await res.json();
+      return { status: res.status, error: errorResponse.error || `Error ${res.status}: ${res.statusText}` };
+    }
+
+    const json = await res.json();
+    return json;
+
+  } catch (error) {
+    console.error("Error fetching professor reviews:", error);
+    return { error: "Failed to fetch professor reviews" };
+  }
+};
+
+
 const createProfessorReview = async (id, formData) => {
   try {
     const url = new URL(`${BASE_URL}/professors/${id}/review`);
@@ -318,4 +344,4 @@ const removeProfessorComment = async (id, reviewId, commentId) => {
 
 
 
-export default { indexProfessors, getProfessor, addProfessorCourse, removeProfessorCourse, addProfessorToBookmarks, removeProfessorFromBookmarks, createProfessorReview, updateProfessorReview, deleteProfessorReview, addProfessorComment, updateProfessorComment, removeProfessorComment };
+export default { indexProfessors, getProfessor, addProfessorCourse, removeProfessorCourse, addProfessorToBookmarks, removeProfessorFromBookmarks, getProfessorReviews, createProfessorReview, updateProfessorReview, deleteProfessorReview, addProfessorComment, updateProfessorComment, removeProfessorComment };

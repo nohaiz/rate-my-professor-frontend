@@ -1,4 +1,4 @@
-import React, {  useState } from "react";
+import React, { useState } from "react";
 import AuthServices from "../../../services/AuthServices";
 
 const SignInForm = () => {
@@ -16,12 +16,12 @@ const SignInForm = () => {
     setError("");
     e.preventDefault();
 
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(email) && !email) {
       setError("Please provide a valid email address.");
       return;
     }
 
-    if (!passwordRegex.test(password)) {
+    if (!passwordRegex.test(password) && !password) {
       setError("Please ensure your password meets the requirements.");
       return;
     }

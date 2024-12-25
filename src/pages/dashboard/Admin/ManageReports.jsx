@@ -27,7 +27,7 @@ const ManageReports = () => {
     const fetchReports = async () => {
       try {
         const response = await ReportServices.getAllReviewReports();
-        setReports(response.reports);
+        setReports(response?.reports ? response?.reports : []);
       } catch (error) {
         console.error("Error fetching reports:", error);
       }
@@ -53,7 +53,7 @@ const ManageReports = () => {
     }
 
     setFilteredReports(filteredList);
-    setCurrentPage(1); 
+    setCurrentPage(1);
   }, [searchQuery, selectedCategory, selectedStatus, reports]);
 
   const handlePagination = (page) => {
