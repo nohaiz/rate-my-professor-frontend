@@ -269,7 +269,11 @@ const ManageReports = () => {
               </table>
             </div>
           </div>
-
+          {filteredReports.length === 0 && (
+            <div className="flex items-center justify-center text-red-500 text-sm mt-5">
+              No reports available
+            </div>
+          )}
           {renderPagination()}
         </>
       )}
