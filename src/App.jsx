@@ -51,7 +51,7 @@ function App() {
 
   useEffect(() => {
     fetchNotifications();
-    const intervalId = setInterval(fetchNotifications, 10000);
+    const intervalId = setInterval(fetchNotifications, 5000);
 
     return () => clearInterval(intervalId);
   }, [user]);

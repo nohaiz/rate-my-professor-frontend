@@ -60,7 +60,6 @@ const ReportForm = ({ onCancel, onSave, editEntity }) => {
         newErrors.generalError = "An error occurred. Please try again later.";
         setErrors(newErrors);
       } else {
-        console.log(response)
         onSave(response.report);
       }
     } catch (error) {

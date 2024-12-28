@@ -9,6 +9,7 @@ import ManageUsers from "./ManageUsers";
 import ManageAcademics from "./ManageAcademics";
 import ManageReports from "./ManageReports";
 import ManageAuditTrail from "./ManageAuditTrail";
+import AnalyticsPage from "./AnalyticsPage";
 
 const AdminProfile = ({ handleSignout, user }) => {
   const { id } = useParams();
@@ -58,7 +59,7 @@ const AdminProfile = ({ handleSignout, user }) => {
   return (
     <div className="p-6">
       <div className="mb-6 flex space-x-4 border-b border-gray-300 pb-2">
-        {['profile', 'dashboard', 'academic', 'reporting', 'audit'].map(tab => (
+        {['profile', 'dashboard', 'academic', 'reporting', 'audit', 'statistics-analytics'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -72,6 +73,7 @@ const AdminProfile = ({ handleSignout, user }) => {
             {tab === 'academic' && 'Academic Dashboard'}
             {tab === 'reporting' && 'Reporting & Moderation'}
             {tab === 'audit' && 'Audit Trail'}
+            {tab === 'statistics-analytics' && 'Statistics & Analytics'}
 
           </button>
         ))}
@@ -158,6 +160,11 @@ const AdminProfile = ({ handleSignout, user }) => {
           {activeTab === 'audit' && (
             <section className="space-y-6">
               <ManageAuditTrail />
+            </section>
+          )}
+          {activeTab === 'statistics-analytics' && (
+            <section className="space-y-6">
+              <AnalyticsPage />
             </section>
           )}
         </>
