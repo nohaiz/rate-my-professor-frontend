@@ -153,6 +153,7 @@ const Searchbar = ({ setErrorMessage, user }) => {
         updatedHistory.professors = updatedHistory.professors.filter(history => history.searchText !== item.searchText);
       }
       setSearchHistory(updatedHistory);
+      fetchSearchHistory();  
     } catch (error) {
       console.error("Error deleting search history:", error);
     }
@@ -234,12 +235,12 @@ const Searchbar = ({ setErrorMessage, user }) => {
           onChange={handleQueryChange}
           onFocus={() => setIsSearchActive(true)}
           onBlur={handleBlur}
-          className="sm:text-sm/6 w-full px-3 py-2 border border-gray-300 rounded-md shadow-focus:ring-indigo-500 focus:border-indigo-500"
+          className="sm:text-sm/6 w-full px-3 py-2 border border-gray-300 rounded-md"
           placeholder={`Search ${searchType.charAt(0).toUpperCase() + searchType.slice(1)} Name`}
           autoComplete="off"
         />
 
-        <select onChange={handleSearchTypeChange} value={searchType} className="sm:text-sm/6 w-1/2 px-3 py-2 border border-gray-300 rounded-md shadow-focus:ring-indigo-500 focus:border-indigo-900">
+        <select onChange={handleSearchTypeChange} value={searchType} className="sm:text-sm/6 w-1/2 px-3 py-2 border border-gray-300 rounded-md">
           <option value="institutes">Institutes</option>
           <option value="professors">Professors</option>
         </select>

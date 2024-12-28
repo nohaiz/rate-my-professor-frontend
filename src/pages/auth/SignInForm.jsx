@@ -12,17 +12,34 @@ const SignInForm = () => {
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-  const handleSignIn = async (e) => {
-    setError("");
-    e.preventDefault();
+  const validateSignInForm = () => {
+    const newErrors = {};
 
-    if (!emailRegex.test(email) && !email) {
-      setError("Please provide a valid email address.");
-      return;
+    if (!email) {
+      newErrors.email = "Email is required.";
+    } else if (!emailRegex.test(email)) {
+      newErrors.email = "Please provide a valid email address.";
     }
 
-    if (!passwordRegex.test(password) && !password) {
-      setError("Please ensure your password meets the requirements.");
+    if (!password) {
+      newErrors.password = "Password is required.";
+    } else if (!passwordRegex.test(password)) {
+      newErrors.password = "Password must include an uppercase letter, lowercase letter, number, and special character.";
+    }
+
+    if (!otp && is2FAEnabled) {
+      newErrors.otp = "Please enter the OTP from your Authenticator App.";
+    }
+
+    setError(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSignIn = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    if (!validateSignInForm()) {
       return;
     }
 
@@ -34,11 +51,11 @@ const SignInForm = () => {
       if (response.twofaRequired) {
         setIs2FAEnabled(true);
         setQrCodeUrl(response.qrCodeUrl);
-      } else if (response.message === 'ok') {
+      } else if (response.message === "ok") {
         setIs2FAEnabled(true);
       }
     } catch (err) {
-      setError("An error occurred during sign in.");
+      setError({ general: "An error occurred during sign in." });
     }
   };
 
@@ -46,7 +63,7 @@ const SignInForm = () => {
     e.preventDefault();
 
     if (!otp) {
-      setError("Please enter the OTP.");
+      setError({ otp: "Please enter the OTP." });
       return;
     }
 
@@ -57,15 +74,13 @@ const SignInForm = () => {
         window.location.href = "/";
       }
     } catch (err) {
-      setError("Invalid OTP or error occurred.");
+      setError({ otp: "Invalid OTP or error occurred." });
     }
   };
 
   return (
     <div className="max-w-md mx-auto p-7 bg-white mt-10">
-      <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900">
-        Sign In to Your Account
-      </h2>
+      <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900">Sign In to Your Account</h2>
 
       {!is2FAEnabled ? (
         <form onSubmit={handleSignIn} className="space-y-8 mt-8">
@@ -75,11 +90,9 @@ const SignInForm = () => {
               type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm/6"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
-            {error && error.includes("email") && (
-              <div className="text-xs text-red-500 mt-1">{error}</div>
-            )}
+            {error.email && <div className="text-red-500 text-sm mt-1">{error.email}</div>}
           </div>
 
           <div>
@@ -88,16 +101,14 @@ const SignInForm = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm/6"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             />
-            {error && error.includes("password") && (
-              <div className="text-xs text-red-500 mt-1">{error}</div>
-            )}
+            {error.password && <div className="text-red-500 text-sm mt-1">{error.password}</div>}
           </div>
 
-          {error && !error.includes("password") && !error.includes("email") && (
-            <div className="bg-red-100 text-red-700 p-3 rounded-md shadow-md text-sm">
-              <strong>Error:</strong> {error}
+          {error.general && (
+            <div className="text-red-500 text-sm">
+              Something went wrong try again.
             </div>
           )}
 
@@ -112,7 +123,9 @@ const SignInForm = () => {
         <div className="space-y-6 mt-6">
           {qrCodeUrl && (
             <>
-              <h3 className="text-lg font-semibold text-gray-900 text-center">Scan the QR Code to Set Up Google Authenticator</h3>
+              <h3 className="text-lg font-semibold text-gray-900 text-center">
+                Scan the QR Code to Set Up Google Authenticator
+              </h3>
               <img src={qrCodeUrl} alt="QR Code for 2FA" className="mx-auto" />
             </>
           )}
@@ -124,11 +137,9 @@ const SignInForm = () => {
                 type="text"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm/6"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               />
-              {error && error.includes("OTP") && (
-                <div className="text-xs text-red-500 mt-1">{error}</div>
-              )}
+              {error.otp && <div className="text-red-500 text-sm mt-1">{error.otp}</div>}
             </div>
 
             <button

@@ -97,8 +97,9 @@ const ManageReports = () => {
     );
   };
 
-  const TextWithShowMore = ({ text, maxLength = 50 }) => {
+  const TextWithShowMore = ({ text, maxLength = 90 }) => {
     const [isExpanded, setIsExpanded] = useState(false);
+
     const truncatedText = text.slice(0, maxLength);
 
     const handleToggle = () => {
@@ -107,13 +108,16 @@ const ManageReports = () => {
 
     return (
       <div>
-        <p>{isExpanded ? text : truncatedText}</p>
-        <button onClick={handleToggle} className="text-blue-500 hover:text-blue-700">
-          {isExpanded ? "Show Less" : "Show More"}
-        </button>
+        <p>{isExpanded || text.length <= maxLength ? text : truncatedText}</p>
+        {text.length > maxLength && (
+          <button onClick={handleToggle} className="text-blue-500 hover:text-blue-700">
+            {isExpanded ? "Show Less" : "Show More"}
+          </button>
+        )}
       </div>
     );
   };
+
 
   const handleDeleteReport = async (reportId) => {
     try {
@@ -153,10 +157,12 @@ const ManageReports = () => {
         <>
           <div className="flex justify-between items-center mb-6 ml-6">
             <div className="flex flex-col space-y-2">
-              <h3 className="text-lg font-semibold text-gray-900">Reports Management</h3>
-              {successMessage && (
-                <div className="text-green-400 text-sm font-medium ml-4">{successMessage}</div>
-              )}
+              <div className="flex items-center">
+                <h3 className="text-lg font-semibold text-gray-900">Reports Management</h3>
+                {successMessage && (
+                  <div className="text-green-400 text-sm font-medium ml-4">{successMessage}</div>
+                )}
+              </div>
               <p className="text-sm text-gray-600 mt-1">
                 A comprehensive list of all review reports, including their reason, category, and professor details.
               </p>
@@ -240,19 +246,21 @@ const ManageReports = () => {
                         <td className="px-6 py-4 text-gray-500 font-semibold">
                           {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
                         </td>
-                        <td className="px-6 py-4 flex items-center space-x-4">
-                          <button
-                            className="text-black hover:text-gray-800 text-sm"
-                            onClick={() => handleEditReport(report)}
-                          >
-                            <AiOutlineEdit className="mr-1" />
-                          </button>
-                          <button
-                            className="text-red-600 hover:text-red-900 text-sm"
-                            onClick={() => handleDeleteReport(report._id)}
-                          >
-                            <AiOutlineDelete className="mr-2" />
-                          </button>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center space-x-4">
+                            <button
+                              className="text-black hover:text-gray-800 text-sm"
+                              onClick={() => handleEditReport(report)}
+                            >
+                              <AiOutlineEdit className="mr-1" />
+                            </button>
+                            <button
+                              className="text-red-600 hover:text-red-900 text-sm"
+                              onClick={() => handleDeleteReport(report._id)}
+                            >
+                              <AiOutlineDelete className="mr-2" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );

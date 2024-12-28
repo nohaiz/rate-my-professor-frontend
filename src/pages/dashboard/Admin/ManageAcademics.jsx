@@ -402,18 +402,26 @@ const ManageAcademics = () => {
                     }
                     {entityType === "Department" && (
                       <td className="px-6 py-4 text-gray-500 font-semibold">
-                        {institutes
-                          .filter((inst) =>
-                            inst.departments &&
-                            inst.departments.some((dept) => dept && dept._id === entity._id)
-                          )
-                          .map((inst) => (
-                            <div key={inst._id}>
-                              <span>{inst.name}</span>
-                            </div>
-                          ))}
+                        {institutes.filter((inst) =>
+                          inst.departments &&
+                          inst.departments.some((dept) => dept && dept._id === entity._id)
+                        ).length > 0 ? (
+                          institutes
+                            .filter((inst) =>
+                              inst.departments &&
+                              inst.departments.some((dept) => dept && dept._id === entity._id)
+                            )
+                            .map((inst) => (
+                              <div key={inst._id}>
+                                <span>{inst.name}</span>
+                              </div>
+                            ))
+                        ) : (
+                          <span>Empty</span>
+                        )}
                       </td>
                     )}
+
                     <td className="px-6 py-4">
                       <button
                         className="text-black hover:text-gray-800 text-sm"

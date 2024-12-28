@@ -154,7 +154,7 @@ const ProfessorReviewForm = () => {
           id="reviewText"
           placeholder="Write your review here..."
           rows="10"
-          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm leading-tight text-gray-900"
+          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-1 text-sm leading-tight text-gray-900"
           value={text}
           onChange={(e) => setText(e.target.value)}
         ></textarea>

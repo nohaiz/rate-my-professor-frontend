@@ -123,13 +123,13 @@ const ProfessorList = ({ user }) => {
                           <p className="text-gray-900 font-bold text-s">
                             {professor.institution ? professor.institution.name : "Unknown University"}
                           </p>
-                          <p className="text-gray-900">
+                          <div className="text-gray-900">
                             {professor.department && professor.department.length > 0
                               ? professor.department.map((department, index) => (
                                 <p key={index} className="">{department.name || "Unknown Department"}</p>
                               ))
                               : <p>Unknown Department</p>}
-                          </p>
+                          </div>
                         </div>
                       </div>
                       <div className="flex justify-between items-center">

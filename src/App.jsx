@@ -43,20 +43,17 @@ function App() {
 
   const fetchNotifications = async () => {
     const response = await NotificationService.getUserNotifications(user.Id);
-    console.log(response)
-    setUnreadCount(response.length > 0 ? response.notifications.filter(notification => !notification.isRead).length : '');
-    if (response.notifications) {
+    setUnreadCount(response.notifications.filter(notification => !notification.isRead).length);
+    if (response?.notifications) {
       setNotifications(response.notifications);
     }
   };
 
   useEffect(() => {
-    if (user) {
-      fetchNotifications();
-      const intervalId = setInterval(fetchNotifications, 10000);
+    fetchNotifications();
+    const intervalId = setInterval(fetchNotifications, 10000);
 
-      return () => clearInterval(intervalId);
-    }
+    return () => clearInterval(intervalId);
   }, [user]);
 
   return (

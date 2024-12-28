@@ -136,9 +136,15 @@ const AdminUserForm = ({ setUserFormVisible, editUserId, setSuccessMessage }) =>
         newErrors.fieldOfStudy = "Field of study must be 30 characters max";
       }
       if (!formData.fieldOfStudy || formData.fieldOfStudy.trim() === "") formData.fieldOfStudy = "";
-      if (formData.GPA && (formData.GPA < 0.0 || formData.GPA > 4.0)) {
-        newErrors.GPA = "GPA must be between 0.0 and 4.0";
+      if (formData.GPA) {
+        const gpaRegex = /^(\d(\.\d{1,2})?)$/;
+        if (!gpaRegex.test(formData.GPA)) {
+          newErrors.GPA = "GPA must be a valid decimal number";
+        } else if (formData.GPA < 0.0 || formData.GPA > 4.0) {
+          newErrors.GPA = "GPA must be between 0.0 and 4.0";
+        }
       }
+
       if (!formData.institution || !formData.institution.trim()) newErrors.institution = "Institution is required";
     }
     setErrors(newErrors);
@@ -232,7 +238,7 @@ const AdminUserForm = ({ setUserFormVisible, editUserId, setSuccessMessage }) =>
     const commonFields = [
       { label: "First Name", name: "firstName", type: "text", value: formData.firstName },
       { label: "Last Name", name: "lastName", type: "text", value: formData.lastName },
-      { label: "Email", name: "email", type: "email", value: formData.email },
+      { label: "Email", name: "email", type: "text", value: formData.email },
       { label: "Password", name: "password", type: "password", value: formData.password },
       { label: "Confirm Password", name: "confirmPassword", type: "password", value: formData.confirmPassword },
     ];

@@ -99,6 +99,7 @@ const StudentProfile = ({ handleSignout, user }) => {
   };
 
   const handleEditComment = (reviewId, commentId) => {
+    setErrorMessage('')
     setStudentProfile((prevProfile) => {
       const updatedReviews = prevProfile.studentAccount.reviews.map((review) => {
         if (review._id === reviewId) {
@@ -194,15 +195,24 @@ const StudentProfile = ({ handleSignout, user }) => {
     }
   };
 
-
-
   const handleSaveReview = async (reviewId, professorId, updatedReviewText, updatedRating) => {
     setErrorMessage("");
-    if (!updatedReviewText || updatedReviewText.length > 500) {
-      setErrorMessage("Review text is required and should be less than 500 characters.");
+    if (!updatedReviewText) {
+      setErrorMessage("Review text is required.");
       return;
     }
+
+    if (updatedReviewText.length > 500) {
+      setErrorMessage("Review text should be less than 500 characters.");
+      return;
+    }
+
     const rating = parseFloat(updatedRating);
+    if (!updatedRating) {
+      setErrorMessage("Rating is required.");
+      return;
+    }
+
     if (isNaN(rating) || rating < 0 || rating > 5) {
       setErrorMessage("Rating must be a number between 0 and 5.");
       return;
@@ -416,7 +426,11 @@ const StudentProfile = ({ handleSignout, user }) => {
                           onClick={() => handleEditReview(review._id)}
                           className="flex items-center text-sm text-gray-900 hover:text-indigo-600 focus:outline-none"
                         >
-                          Edit Review <AiOutlineEdit className="mr-4" />
+                          {!review.isEditMode ? (
+                            <>Edit Review <AiOutlineEdit className="mr-4" /></>
+                          ) : (
+                            <AiOutlineClose className="mr-4" />
+                          )}
                         </button>
                         <button
                           onClick={() => handleDeleteReview(review.professorId._id, review._id)}
@@ -456,6 +470,10 @@ const StudentProfile = ({ handleSignout, user }) => {
                             className="text-sm text-gray-700 sm:col-span-2 border border-gray-300 rounded-md p-2 w-3/4 h-32"
                           />
                         </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 mt-4">
+                          <div className="text-sm font-medium text-gray-900"></div>
+                          {errorMessage && <div className="text-red-500 text-sm">{errorMessage}</div>}
+                        </div>
                         <button type="submit" className="mt-4 px-6 py-2 bg-indigo-500 text-white rounded-full flex ml-auto">Save</button>
                       </form>
                     ) : (
@@ -469,7 +487,7 @@ const StudentProfile = ({ handleSignout, user }) => {
                           <div className="text-sm text-gray-700 sm:col-span-2 w-3/4">{review.text}
                             <button
                               onClick={() => toggleComments(review._id)}
-                              className="text-sm text-indigo-600 flex mt-2"
+                              className="text-xs text-indigo-600 flex mt-2"
                             >
                               {review.showComments ? "Hide Comments" : "Show Comments"}
                             </button>
@@ -486,18 +504,31 @@ const StudentProfile = ({ handleSignout, user }) => {
                                               e.preventDefault();
                                               handleSaveComment(review.professorId._id, review._id, comment._id, e.target.text.value);
                                             }}>
-                                              <textarea
-                                                name="text"
-                                                defaultValue={comment.text}
-                                                className="text-sm text-gray-700 sm:col-span-2 border border-gray-300 rounded-md p-2 w-3/4 h-32"
-                                              />
+                                              <div className="flex flex-col items-start">
+                                                <button
+                                                  className="mb-2 ml-auto"
+                                                  onClick={() => handleEditComment(review._id, comment._id)}
+                                                >
+                                                  {comment.isEditMode && <AiOutlineClose />}
+                                                </button>
+
+                                                <textarea
+                                                  name="text"
+                                                  defaultValue={comment.text}
+                                                  className="text-sm text-gray-700 sm:col-span-2 border border-gray-300 rounded-md p-2 w-3/4 h-32"
+                                                />
+                                                {errorMessage && <div className="text-red-500 text-sm">{errorMessage}</div>}
+
+                                              </div>
                                               <button type="submit" className="mt-4 px-6 py-2 bg-indigo-500 text-white rounded-full flex ml-auto">Save</button>
                                             </form>
                                           ) : (
                                             <>
                                               <div className="text-sm text-gray-700">
-                                                {comment.text}
-                                                <div className="flex mt-2">
+                                                <div className="border-b border-gray-800 pb-1 mb-4">
+                                                  {comment.text}
+                                                </div>
+                                                <div className="flex mt-3">
                                                   <button
                                                     onClick={() => handleEditComment(review._id, comment._id)}
                                                     className="ml-2 flex items-center text-xs text-gray-900 hover:text-indigo-600 focus:outline-none"
@@ -517,7 +548,7 @@ const StudentProfile = ({ handleSignout, user }) => {
                                         </div>
                                       ))
                                   ) : (
-                                    <p className="text-sm text-gray-600 italic">No comments available for this review.</p>
+                                    <p className="text-xs text-gray-600">No comments available for this review.</p>
                                   )
                                 ) : null
                               ))}

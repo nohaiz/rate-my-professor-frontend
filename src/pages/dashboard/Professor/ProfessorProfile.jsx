@@ -444,11 +444,20 @@ const ProfessorProfile = ({ handleSignout, user }) => {
                                             handleSaveComment(review._id, comment._id, e.target.text.value);
                                           }}
                                         >
-                                          <textarea
-                                            name="text"
-                                            defaultValue={comment.text}
-                                            className="text-sm text-gray-700 sm:col-span-2 border border-gray-300 rounded-md p-2 w-3/4 h-32"
-                                          />
+                                          <div className="flex flex-col items-start">
+                                            <button
+                                              className="mb-2 ml-auto"
+                                              onClick={() => handleEditComment(review._id, comment._id)}
+                                            >
+                                              {comment.isEditMode && <AiOutlineClose />}
+                                            </button>
+                                            <textarea
+                                              name="text"
+                                              defaultValue={comment.text}
+                                              className="text-sm text-gray-700 sm:col-span-2 border border-gray-300 rounded-md p-2 w-3/4 h-32"
+                                            />
+                                            {errorMessage && <div className="text-red-500 text-sm">{errorMessage}</div>}
+                                          </div>
                                           <button type="submit" className="mt-4 px-6 py-2 bg-indigo-500 text-white rounded-full flex ml-auto">
                                             Save
                                           </button>
@@ -456,7 +465,9 @@ const ProfessorProfile = ({ handleSignout, user }) => {
                                       ) : (
                                         <>
                                           <div className="text-sm text-gray-700">
-                                            {comment.text}
+                                            <div className="border-b border-gray-800 pb-1 mb-4">
+                                              {comment.text}
+                                            </div>
                                             <div className="flex mt-2">
                                               <button
                                                 onClick={() => handleEditComment(review._id, comment._id)}
@@ -478,8 +489,9 @@ const ProfessorProfile = ({ handleSignout, user }) => {
                                   ))}
                               </div>
                             ) :
-                              <></>
-                            }
+                              review.showComments && review.comments.length === 0 ? (
+                                <p className="text-sm text-gray-500">No comments available</p>
+                              ) : null}
                           </div>
 
                         </div>
@@ -488,7 +500,7 @@ const ProfessorProfile = ({ handleSignout, user }) => {
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-gray-700">No reviews available</p>
+                <p className="text-sm text-gray-500">No reviews available</p>
               )}
             </section>
           )}

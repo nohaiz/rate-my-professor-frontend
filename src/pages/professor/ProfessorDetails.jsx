@@ -33,8 +33,10 @@ const ProfessorDetails = ({ user }) => {
   useEffect(() => {
     const fetchProfessor = async () => {
       const response = await ProfessorServices.getProfessor(id);
-      const userProfile = await ProfileService.getProfile(user.Id)
-      setUserProfile(userProfile?.studentAccount ? userProfile.studentAccount._id : '')
+      if (user) {
+        const userProfile = await ProfileService.getProfile(user?.Id)
+        setUserProfile(userProfile?.studentAccount ? userProfile.studentAccount._id : '')
+      }
       if (response) {
         setProfessor(response.professor);
         setCourses(response.course);
@@ -54,10 +56,6 @@ const ProfessorDetails = ({ user }) => {
   const handleCreateReview = () => {
     setIsButtonDisabled(true);
     navigate("review");
-  };
-
-  const handleViewInstitution = (institutionId) => {
-    navigate(`/institutions/${institutionId}`)
   };
 
   const getRatingColor = (rating) => {
@@ -231,55 +229,67 @@ const ProfessorDetails = ({ user }) => {
       <div className="flex items-center justify-between mr-8 ml-8 mt-8 mb-4">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">
-            <span className="text-2xl font-bold text-gray-900">{professor.averageRating?.toFixed(2)}/5.00 </span>
             {professor.firstName} {professor.lastName}
+            <span className="text-2xl font-bold text-gray-900 ml-1">{professor.averageRating?.toFixed(2)}/5.00 </span>
           </h3>
-          <p className="mt-1 max-w-2xl text-sm text-gray-500">
-            <button onClick={() => handleViewInstitution(professor.institution._id)}>View Institution</button>
-          </p>
-        </div>
-        <div className="flex space-x-4">
-          {user?.role !== 'student' ? (
-            <></>
-          ) : (
-            isButtonDisabled ?
-              <></>
-              :
-              <button
-                className="text-sm font-medium rounded-full py-2 px-6 mr-4 bg-indigo-500 text-white hover:bg-indigo-600"
-                onClick={handleCreateReview}
-              >
-                Create Review
-              </button>
-          )}
         </div>
       </div >
-      {professor.bio ? <div className="py-2 sm:grid sm:grid-cols-4 sm:px-0 ml-8">
-        <dd className="text-sm text-gray-700 sm:col-span-2 sm:mt-0">
-          <div className="w-full sm:text-sm text-gray-700 min-h-[150px] break-words hover:cursor-default">
-            {professor.bio}
-          </div>
-        </dd>
-      </div> : <></>}
-
+      {professor.bio ? (
+        <div className="py-2 sm:grid sm:grid-cols-4 sm:px-0 ml-8">
+          <dd className="text-sm text-gray-700 sm:col-span-2 sm:mt-0">
+            <div className="w-full sm:text-sm text-gray-700 min-h-[150px] break-words hover:cursor-default text-justify">
+              {professor.bio}
+            </div>
+          </dd>
+        </div>
+      ) : (
+        <></>
+      )}
+      <div className="ml-6 mb-8">
+        {user?.role !== 'student' ? (
+          <></>
+        ) : (
+          isButtonDisabled ?
+            <></>
+            :
+            <button
+              className="text-sm font-medium rounded-full py-2 px-6 mr-4 bg-indigo-500 text-white hover:bg-indigo-600"
+              onClick={handleCreateReview}
+            >
+              Create Review
+            </button>
+        )}
+      </div>
       <Outlet />
 
-      <h4 className="text-lg font-semibold text-gray-900 mb-4 ml-8">Reviews</h4>
-      <div className="ml-8 mt-4 space-x-2 mb-6">
-        <label htmlFor="courseSelect" className="text-sm text-gray-700">Filter by Course:</label>
-        <select
-          id="courseSelect"
-          value={selectedCourse}
-          onChange={handleCourseFilter}
-          className="mt-2 py-1 px-2 rounded-lg focus:outline-none text-sm"
-        >
-          <option value="">All Courses</option>
-          {courses.map((course) => (
-            <option key={course._id} value={course._id}>
-              {course.name} ({course.code})
-            </option>
-          ))}
-        </select>
+      <h4 className="text-lg font-bold text-gray-900 mb-4 ml-8">Student Reviews</h4>
+      <div className="ml-8 mt-4 flex flex-wrap gap-4 mb-6">
+        <div className="w-full sm:w-1/4">
+          <label htmlFor="courseSelect" className="block sm:text-sm font-medium text-gray-700 mb-2">
+            Filter by Course:
+          </label>
+          <select
+            id="courseSelect"
+            value={selectedCourse}
+            onChange={handleCourseFilter}
+            className="sm:text-sm px-3 py-2 border border-gray-300 rounded-md w-full"
+          >
+            <option value="">All Courses</option>
+            {courses.map((course) => (
+              <option key={course._id} value={course._id}>
+                {course.name} ({course.code})
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="w-full sm:w-auto mt-4 sm:mt-0 flex items-end">
+          <button
+            onClick={() => setSelectedCourse('')}
+            className="text-indigo-600 bg-indigo-500 text-white text-sm font-medium rounded-full py-2 px-8 hover:bg-indigo-600 w-full sm:w-auto"
+          >
+            Clear Filters
+          </button>
+        </div>
       </div>
 
       <div className="">
@@ -333,16 +343,19 @@ const ProfessorDetails = ({ user }) => {
 
                 <div className="mt-4">
                   <div className="mt-4 space-y-4">
-                    <div className="flex space-x-4">
+                    <div className="flex space-x-2">
                       <button
                         onClick={() => toggleCommentsVisibility(review._id)}
                         className="mt-1 max-w-2xl text-sm text-gray-500 hover:underline"
                       >
-                        {visibleReviews[review._id]?.commentsVisible ? "Hide Comments" : "View All Comments"}
+                        {visibleReviews[review._id]?.commentsVisible ? "Hide Comments" : `View All Comments`}
                       </button>
+                      <div className="mt-1 max-w-2xl text-sm text-gray-500 hover:cursor-default">
+                        {review.comments.length}
+                      </div>
                     </div>
 
-                    {user && user.Id !== review.studentId._id && (
+                    {user && user.Id !== review.studentId._id && user?.role !== 'admin' && (
                       <div className="mt-4 space-y-4">
                         <button
                           onClick={() => toggleCommentInput(review._id)}
@@ -393,8 +406,7 @@ const ProfessorDetails = ({ user }) => {
                       </div>
                     ))}
                   </div>
-                )
-                }
+                )}
               </div >
             ))
         ) : (

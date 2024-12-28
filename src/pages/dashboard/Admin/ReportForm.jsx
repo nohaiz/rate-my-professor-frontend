@@ -105,7 +105,7 @@ const ReportForm = ({ onCancel, onSave, editEntity }) => {
               <textarea
                 value={reportReason}
                 onChange={(e) => setReportReason(e.target.value)}
-                className="sm:text-sm border border-gray-300 p-2 rounded-md min-h-[80px] focus:ring-indigo-500 focus:border-indigo-500"
+                className="sm:text-sm border border-gray-300 p-2 rounded-md min-h-[200px] focus:ring-indigo-500 focus:border-indigo-500"
               />
               {errors.reportReason && (
                 <div className="text-xs font-medium text-red-500 mt-1">{errors.reportReason}</div>

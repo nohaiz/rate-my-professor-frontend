@@ -11,7 +11,7 @@ const AdminProfileForm = ({ adminProfile, setAdminProfile, setIsEditing }) => {
     password: '',
     confirmPassword: '',
   });
-  const [isChangingPassword, setIsChangingPassword] = useState(false); 
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [errors, setErrors] = useState({});
 
   const handleChange = ({ target: { name, value } }) => {
@@ -75,7 +75,7 @@ const AdminProfileForm = ({ adminProfile, setAdminProfile, setIsEditing }) => {
     setErrors({});
   };
 
-  const renderInputField = (label, name, type = 'text', placeholder = '', disabled = false) => (
+  const renderInputField = (label, name, type = 'text', placeholder = '') => (
     <div className="flex flex-col space-y-2">
       <label className="text-sm font-medium text-gray-900">{label}</label>
       <input
@@ -85,7 +85,6 @@ const AdminProfileForm = ({ adminProfile, setAdminProfile, setIsEditing }) => {
         onChange={handleChange}
         className="sm:text-sm/6 border border-gray-300 p-2 rounded-md min-h-[40px] focus:ring-indigo-500 focus:border-indigo-500"
         placeholder={placeholder}
-        disabled={disabled}
       />
       {errors[name] && <div className="text-xs font-medium text-red-500 mt-1">{errors[name]}</div>}
     </div>
@@ -96,7 +95,7 @@ const AdminProfileForm = ({ adminProfile, setAdminProfile, setIsEditing }) => {
       <form onSubmit={handleSubmit} className="w-full max-w-md space-y-4 p-4">
         <div className="space-y-5">
           {renderInputField('Full Name', 'fullName', 'text', 'First & Last Name')}
-          {renderInputField('Email Address', 'email', 'email', '', true)}
+          {renderInputField('Email Address', 'email', 'text', 'Enter your email')}
 
           {isChangingPassword && (
             <>
