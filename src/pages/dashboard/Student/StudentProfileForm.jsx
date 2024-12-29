@@ -50,7 +50,7 @@ const StudentProfileForm = ({ studentProfile, setStudentProfile, setIsEditing })
       if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords don’t match';
     }
     if (!formData.fieldOfStudy) newErrors.fieldOfStudy = 'Field of study required'
-    if (!formData.institution) newErrors.institution = 'Select institution';
+    // if (!formData.institution) newErrors.institution = 'Select institution';
 
     const gpa = String(formData.GPA).trim();
     const gpaRegex = /^(?:[0-4](?:\.\d{1,2})?|4(\.0{1,2})?)$/;

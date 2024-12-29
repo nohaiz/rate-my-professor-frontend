@@ -39,7 +39,21 @@ const AnalyticsPage = () => {
           ProfessorServices.indexProfessors({}),
         ]);
 
-        const professor = professorResponse.professorsData[0];
+        const professorsStats = professorResponse.professorsData.map((professor) => {
+          return {
+            name: professor.firstName + ' ' + professor.lastName,
+            averageRating: professor.averageRating,
+            reviewCount: professor.reviewCount,
+            ratingBreakdown: professor.reviews.reduce((acc, review) => {
+              const rating = review.rating || 0;
+              acc[rating] = (acc[rating] || 0) + 1;
+              return acc;
+            }, {}),
+            commentsPerReview: professor.reviews.map((review) => review.comments.length),
+            courses: professor.courses,
+            department: professor.department[0]?.name,
+          };
+        });
 
         const userStats = {
           totalUsers: usersResponse.users.length || 0,
@@ -62,24 +76,11 @@ const AnalyticsPage = () => {
           }
           : { totalReports: 0, reportsByCategory: {} };
 
-        const professorStats = {
-          averageRating: professor.averageRating,
-          reviewCount: professor.reviewCount,
-          ratingBreakdown: professor.reviews.reduce((acc, review) => {
-            const rating = review.rating || 0;
-            acc[rating] = (acc[rating] || 0) + 1;
-            return acc;
-          }, {}),
-          commentsPerReview: professor.reviews.map((review) => review.comments.length),
-          courses: professor.courses,
-          department: professor.department[0]?.name,
-        };
-
         setAnalytics({
           userStats,
           reportStats,
         });
-        setProfessorData(professorStats);
+        setProfessorData(professorsStats);
       } catch (err) {
         setError('Failed to fetch data for analytics');
       }
@@ -146,10 +147,10 @@ const AnalyticsPage = () => {
   }, [analytics]);
 
   const ratingData = useMemo(() => ({
-    labels: Object.keys(professorData?.ratingBreakdown || {}),
+    labels: professorData?.map((professor) => professor.name),
     datasets: [{
       label: 'Ratings Breakdown',
-      data: Object.values(professorData?.ratingBreakdown || {}),
+      data: professorData?.map((professor) => professor.averageRating),
       backgroundColor: ['#4F46E5', '#6B7280', '#9333EA', '#FBBF24', '#DC2626'],
       borderColor: '#fff',
       borderWidth: 1,
@@ -157,10 +158,10 @@ const AnalyticsPage = () => {
   }), [professorData]);
 
   const commentsData = useMemo(() => ({
-    labels: professorData?.commentsPerReview.map((_, index) => `Review ${index + 1}`),
+    labels: professorData?.map((professor, index) => professor.name),
     datasets: [{
       label: 'Comments per Review',
-      data: professorData?.commentsPerReview || [],
+      data: professorData?.map((professor) => professor.commentsPerReview.length),
       backgroundColor: '#4F46E5',
       borderColor: '#fff',
       borderWidth: 1,
@@ -168,10 +169,10 @@ const AnalyticsPage = () => {
   }), [professorData]);
 
   const coursesData = useMemo(() => ({
-    labels: professorData?.courses.map(course => course.code),
+    labels: professorData?.map((professor) => professor.courses.map(course => course.code)).flat(),
     datasets: [{
       label: 'Courses Taught',
-      data: professorData?.courses.map(course => course.credits),
+      data: professorData?.map((professor) => professor.courses.map(course => course.credits)).flat(),
       backgroundColor: '#9333EA',
       borderColor: '#fff',
       borderWidth: 1,
@@ -180,6 +181,26 @@ const AnalyticsPage = () => {
 
   const chartOptions = {
     plugins: {
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            const index = context.dataIndex;
+            const professor = professorData[index];
+
+            if (context.dataset.label === 'Courses Taught') {
+              return `${professor?.name ? professor?.name : 'No professor assigned'}`;
+            }
+
+            if (context.dataset.label === 'Ratings Breakdown') {
+              const rating = Object.keys(professor?.ratingBreakdown || {})[context.dataIndex];
+              const ratingCount = professor?.ratingBreakdown[rating] || 0;
+              return `${professor?.name ? professor?.name : 'No professor assigned'} - Rating: ${rating ? rating : ''} (${ratingCount} reviews)`;
+            }
+
+            return '';
+          },
+        },
+      },
       legend: {
         position: 'right',
         labels: {
